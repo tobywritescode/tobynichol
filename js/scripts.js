@@ -318,7 +318,7 @@ class FaultyTerminal {
   }
 }
 
-// Initialize on load
+// Initialise on load
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('terminal-bg');
   if (container) {

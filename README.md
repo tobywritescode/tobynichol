@@ -20,7 +20,7 @@ The core visual is a custom port of a WebGL-based CRT terminal component.
     - **Barrel Distortion**: Simulates the curvature of a vintage CRT monitor.
     - **Chromatic Aberration**: Offsets RGB channels based on screen position.
     - **Dynamic Glitch**: Uses sine wave displacement and flicker functions to simulate hardware faults.
-- **Interactivity**: Global mouse tracking is normalized to WebGL coordinates, creating a "ripple" and intensity change in the shader's grid pattern.
+- **Interactivity**: Global mouse tracking is normalised to WebGL coordinates, creating a "ripple" and intensity change in the shader's grid pattern.
 
 ### 2. Deconstructed HUD Layout (`css/styles.css`)
 The UI is built on a **12x12 CSS Grid**.
@@ -49,4 +49,4 @@ The site uses the modern CSS **`:has()` selector** to manage global state withou
 - **Mobile**: The grid collapses into a `flex-direction: column` stack. The `body` overflow is toggled to `auto`, and internal module scrolling is disabled to provide a natural mobile browsing experience.
 
 ## Deployment
-Hosted on **Vercel** as a static project. The repository structure is optimized for zero-config deployment.
+Hosted on **Vercel** as a static project. The repository structure is optimised for zero-config deployment.
