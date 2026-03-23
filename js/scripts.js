@@ -4,7 +4,7 @@
 
 import { Renderer, Program, Mesh, Color, Triangle } from 'https://cdn.skypack.dev/ogl';
 
-// --- WebGL Background Logic (Ported from v1) ---
+// --- WebGL Background Logic ---
 const vertexShader = `
 attribute vec2 position;
 attribute vec2 uv;
@@ -402,37 +402,37 @@ class TerminalCLI {
         }
     }
 
-    showHelp() {
+    async showHelp() {
         this.addLine("AVAILABLE COMMANDS:", 'terminal-info');
-        this.addLine("  /bio      - Personnel file (About Me)");
-        this.addLine("  /work     - Active system modules (Portfolio)");
-        this.addLine("  /links    - External network nodes (Socials)");
-        this.addLine("  /contact  - Initiate comms link (Email)");
-        this.addLine("  /clear    - Wipe console history");
+        await this.typeLine("  /bio      - Personnel file (About Me)", '', 5);
+        await this.typeLine("  /work     - Active system modules (Portfolio)", '', 5);
+        await this.typeLine("  /links    - External network nodes (Socials)", '', 5);
+        await this.typeLine("  /contact  - Initiate comms link (Email)", '', 5);
+        await this.typeLine("  /clear    - Wipe console history", '', 5);
     }
 
-    showBio() {
+    async showBio() {
         this.addLine("DECRYPTING PERSONNEL FILE...", 'terminal-info');
-        this.addLine("A decade deep into the stack. I build robust, high-performance systems with a focus on the Java ecosystem. Over a decade of engineering across the full lifecycle, I specialise in architecting, deploying, and maintaining software that actually works. Driven by technical curiosity and the pursuit of the next complex challenge.");
+        await this.typeLine("A decade deep into the stack. I build robust, high-performance systems with a focus on the Java ecosystem. Over a decade of engineering across the full lifecycle, I specialise in architecting, deploying, and maintaining software that actually works. Driven by technical curiosity and the pursuit of the next complex challenge.", '', 10);
     }
 
-    showWork() {
+    async showWork() {
         this.addLine("ACTIVE PROJECTS:", 'terminal-info');
         this.addLine("  [LIVE]  <a href='https://stratplay.app' target='_blank'>StratPlay.app</a> - Strategy & Analytics");
         this.addLine("  [DOCS]  <a href='README.md' target='_blank'>Technical_Specs.md</a> - System Architecture");
         this.addLine("  [WAIT]  Project_Beta - In Development");
     }
 
-    showLinks() {
+    async showLinks() {
         this.addLine("EXTERNAL NODES:", 'terminal-info');
         this.addLine("  <a href='https://github.com/tobywritescode' target='_blank'>github.exe</a>");
         this.addLine("  <a href='https://linkedin.com/in/tobynichol' target='_blank'>linkedin.sys</a>");
         this.addLine("  <a href='https://github.com/tobywritescode/tobynichol' target='_blank'>source_code.bin</a>");
     }
 
-    showContact() {
+    async showContact() {
         this.addLine("ESTABLISHING ENCRYPTED COMMS CHANNEL...", 'terminal-info');
-        this.addLine("COMMS OPEN AT: <a href='mailto:hello@tobynichol.com'>hello@tobynichol.com</a>");
+        await this.typeLine("COMMS OPEN AT: hello@tobynichol.com", '', 10);
     }
 
     clear() {

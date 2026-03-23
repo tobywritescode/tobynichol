@@ -3,7 +3,7 @@
 A high-performance, framework-less personal landing page evolved into a fully interactive Command Line Interface (CLI).
 
 ## Architecture & Philosophy
-Version 2 moves from a "Passive HUD" to an "Active Terminal" experience. The site is a single-module intelligence console that requires user interaction (`/commands`) to decrypt personnel files and project data. It maintains the "Minimalist-Heavy" philosophy: zero frameworks, zero build steps, and raw WebGL power.
+Version 2 moves from a "Passive HUD" to an "Active Terminal" experience. The site is a single-module intelligence console that requires user interaction (`/help`) to decrypt personnel files and project data. It maintains the "Minimalist-Heavy" philosophy: zero frameworks, zero build steps, and raw WebGL power.
 
 ## Tech Stack
 - **Engine**: [OGL](https://github.com/oframe/ogl) (Minimal WebGL library)

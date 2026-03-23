@@ -36,10 +36,17 @@ body {
   z-index: -1;
   opacity: 0.6;
   pointer-events: none;
+  transition: all 0.5s ease;
 }
 
 #terminal-bg canvas {
   display: block;
+}
+
+/* Dimming Effect Logic */
+body:has(#terminal:hover) #terminal-bg {
+  opacity: 0.4;
+  filter: blur(6px);
 }
 
 .hud-wrapper {
@@ -47,7 +54,6 @@ body {
   z-index: 10;
   width: 90vw;
   height: 85vh;
-  pointer-events: none;
 }
 
 /* SINGLE MODULE LAYOUT */
@@ -116,11 +122,26 @@ body {
   caret-color: var(--accent-color);
 }
 
+#terminal-history a {
+  color: var(--accent-color);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent-faint);
+  transition: all 0.2s ease;
+  font-weight: 700;
+}
+
+#terminal-history a:hover {
+  color: #fff;
+  border-bottom-color: var(--accent-color);
+  text-shadow: 0 0 10px var(--accent-color);
+  background: rgba(255, 255, 255, 0.05);
+}
+
 .terminal-line {
   line-height: 1.6;
   opacity: 0;
   animation: fadeIn 0.3s forwards;
-  white-space: pre-wrap; /* Ensure ASCII art and multi-line text render correctly */
+  white-space: pre-wrap;
   word-break: break-all;
 }
 
