@@ -3,79 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toby Nichol | Personal Landing Page</title>
+    <title>Toby Nichol | Personal Terminal</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <main class="hud-wrapper">
-        <header class="hud-module header-module">
-            <span class="module-meta">ID: TN_001</span>
-            <h1>Toby Nichol</h1>
-            <p class="subtitle">Creative Developer // Designer</p>
-        </header>
-
-        <section id="about" class="hud-module">
-            <span class="module-meta">[BIOMETRIC_DATA]</span>
-            <h2>About</h2>
-            <p>A decade deep into the stack. I build robust, high-performance systems with a focus on the Java ecosystem. Over a decade of engineering across the full lifecycle, I specialise in architecting, deploying, and maintaining software that actually works. Driven by technical curiosity and the pursuit of the next complex challenge.</p>
-        </section>
-
-        <section id="work" class="hud-module">
-            <span class="module-meta">[ACTIVE_PROJECTS]</span>
-            <h2>My Work</h2>
-            <div class="work-grid">
-                <div class="project-item">
-                    <span class="project-status">LIVE</span>
-                    <a href="https://stratplay.app" target="_blank">StratPlay.app</a>
-                    <p class="project-desc">Real-time strategy & analytical tools for competitive gaming.</p>
-                </div>
-                <div class="project-item">
-                    <span class="project-status">DOCS</span>
-                    <a href="README.md" target="_blank">Technical_Specs.md</a>
-                    <p class="project-desc">Detailed architecture and engineering breakdown of this system.</p>
-                </div>
-                <div class="project-item pending">
-                    <span class="project-status">PENDING</span>
-                    <span class="project-name">Project_Beta</span>
-                    <p class="project-desc">Architecting next-gen system utilities. Stay tuned.</p>
-                </div>
+    <main class="hud-wrapper single-module-layout">
+        <section id="terminal" class="hud-module">
+            <span class="module-meta">ID: TN_SYS_001</span>
+            
+            <div id="terminal-header">
+                <h1>Toby Nichol</h1>
+                <p class="subtitle">Interactive Intelligence Terminal // v2.0</p>
             </div>
-        </section>
 
-        <section id="links" class="hud-module">
-            <span class="module-meta">[EXTERNAL_RESOURCES]</span>
-            <h2>Links</h2>
-            <ul class="links-list">
-                <li>
-                    <a href="https://github.com/tobywritescode" target="_blank">
-                        <i data-lucide="github"></i> github.exe
-                    </a>
-                </li>
-                <li>
-                    <a href="https://linkedin.com/in/tobynichol" target="_blank">
-                        <i data-lucide="linkedin"></i> linkedin.sys
-                    </a>
-                </li>
-                <li>
-                    <a href="https://github.com/tobywritescode/tobynichol" target="_blank">
-                        <i data-lucide="code"></i> source_code.bin
-                    </a>
-                </li>
-            </ul>
-        </section>
+            <div id="terminal-history">
+                <!-- System output will be injected here -->
+            </div>
 
-        <section id="contact" class="hud-module">
-            <span class="module-meta">[COMMS_CHANNEL]</span>
-            <h2>Contact</h2>
-            <p>Establishing encrypted link...</p>
-            <a href="mailto:hello@tobynichol.com" class="contact-btn">connect --email</a>
+            <div id="terminal-prompt">
+                <span class="prompt-user">[USER@TOBYNICHOL]:~ ></span>
+                <input type="text" id="command-input" autofocus spellcheck="false" autocomplete="off">
+            </div>
         </section>
     </main>
 
-    <!-- Background moved AFTER wrapper for CSS sibling selector to work -->
+    <!-- Background remains for CRT effect -->
     <div id="terminal-bg" aria-hidden="true"></div>
 
     <script type="module" src="js/scripts.js"></script>

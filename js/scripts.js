@@ -1,10 +1,10 @@
 /**
- * FaultyTerminalBackground - Vanilla JS Port
- * Ported from OGL + React component
+ * tobynichol.com - Terminal v2 Logic
  */
 
 import { Renderer, Program, Mesh, Color, Triangle } from 'https://cdn.skypack.dev/ogl';
 
+// --- WebGL Background Logic (Ported from v1) ---
 const vertexShader = `
 attribute vec2 position;
 attribute vec2 uv;
@@ -219,7 +219,7 @@ class FaultyTerminal {
       glitchAmount: options.glitchAmount || 1.5,
       flickerAmount: options.flickerAmount || 1.0,
       noiseAmp: options.noiseAmp || 1.0,
-      chromationalAberration: options.chromaticAberration || 2.0,
+      chromaticAberration: options.chromaticAberration || 2.0,
       dither: options.dither || 0.1,
       curvature: options.curvature || 0.15,
       tint: options.tint || '#fafaf9',
@@ -277,7 +277,6 @@ class FaultyTerminal {
     window.addEventListener('resize', () => this.resize(), false);
     this.resize();
 
-    // Track mouse movement globally on window
     window.addEventListener('mousemove', (e) => {
       const rect = this.container.getBoundingClientRect();
       this.mouse.x = (e.clientX - rect.left) / rect.width;
@@ -308,7 +307,6 @@ class FaultyTerminal {
     const progress = Math.min(animElapsed / 2000, 1);
     this.program.uniforms.uPageLoadProgress.value = progress;
 
-    // Smooth mouse
     this.smoothMouse.x += (this.mouse.x - this.smoothMouse.x) * 0.08;
     this.smoothMouse.y += (this.mouse.y - this.smoothMouse.y) * 0.08;
     this.program.uniforms.uMouse.value[0] = this.smoothMouse.x;
@@ -318,10 +316,135 @@ class FaultyTerminal {
   }
 }
 
-// Initialise on load
+// --- Terminal Interaction Logic ---
+
+class TerminalCLI {
+    constructor() {
+        this.history = document.getElementById('terminal-history');
+        this.input = document.getElementById('command-input');
+        this.commands = {
+            '/help': () => this.showHelp(),
+            '/bio': () => this.showBio(),
+            '/work': () => this.showWork(),
+            '/links': () => this.showLinks(),
+            '/contact': () => this.showContact(),
+            '/clear': () => this.clear(),
+            '/ls': () => this.showWork(),
+            '/whois': () => this.showBio(),
+            'help': () => this.showHelp(),
+            'clear': () => this.clear()
+        };
+
+        this.init();
+    }
+
+    init() {
+        window.addEventListener('click', () => this.input.focus());
+        this.input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const cmd = this.input.value.trim().toLowerCase();
+                this.handleCommand(cmd);
+                this.input.value = '';
+            }
+        });
+
+        this.bootSequence();
+    }
+
+    async bootSequence() {
+        this.addLine(`
+ _______ _   _    ____   _____ 
+|__   __| \\ | |  / __ \\ / ____|
+   | |  |  \\| | | |  | | (___  
+   | |  | . \` | | |  | |\\___ \\ 
+   | |  | |\\  | | |__| |____) |
+   |_|  |_| \\_|  \\____/|_____/ 
+        `, 'terminal-info');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await this.typeLine("TN_OS [Version 2.0.42]");
+        await this.typeLine("SYSTEM_INITIALIZE: OK");
+        await this.typeLine("ENCRYPTION_LINK: SECURE");
+        await this.typeLine("Type /help to begin connection.");
+        this.addLine("");
+    }
+
+    handleCommand(cmd) {
+        if (cmd === '') return;
+        
+        this.addLine(`<span class="prompt-user">[USER@TOBYNICHOL]:~ ></span> ${cmd}`);
+
+        if (this.commands[cmd]) {
+            this.commands[cmd]();
+        } else {
+            this.addLine(`Command not found: ${cmd}. Type /help for options.`, 'terminal-error');
+        }
+
+        this.history.scrollTop = this.history.scrollHeight;
+    }
+
+    addLine(html, className = '') {
+        const line = document.createElement('div');
+        line.className = `terminal-line ${className}`;
+        line.innerHTML = html;
+        this.history.appendChild(line);
+        this.history.scrollTop = this.history.scrollHeight;
+    }
+
+    async typeLine(text, className = '', speed = 30) {
+        const line = document.createElement('div');
+        line.className = `terminal-line ${className}`;
+        this.history.appendChild(line);
+        
+        for (let i = 0; i < text.length; i++) {
+            line.innerHTML += text[i];
+            this.history.scrollTop = this.history.scrollHeight;
+            await new Promise(resolve => setTimeout(resolve, speed));
+        }
+    }
+
+    showHelp() {
+        this.addLine("AVAILABLE COMMANDS:", 'terminal-info');
+        this.addLine("  /bio      - Personnel file (About Me)");
+        this.addLine("  /work     - Active system modules (Portfolio)");
+        this.addLine("  /links    - External network nodes (Socials)");
+        this.addLine("  /contact  - Initiate comms link (Email)");
+        this.addLine("  /clear    - Wipe console history");
+    }
+
+    showBio() {
+        this.addLine("DECRYPTING PERSONNEL FILE...", 'terminal-info');
+        this.addLine("A decade deep into the stack. I build robust, high-performance systems with a focus on the Java ecosystem. Over a decade of engineering across the full lifecycle, I specialise in architecting, deploying, and maintaining software that actually works. Driven by technical curiosity and the pursuit of the next complex challenge.");
+    }
+
+    showWork() {
+        this.addLine("ACTIVE PROJECTS:", 'terminal-info');
+        this.addLine("  [LIVE]  <a href='https://stratplay.app' target='_blank'>StratPlay.app</a> - Strategy & Analytics");
+        this.addLine("  [DOCS]  <a href='README.md' target='_blank'>Technical_Specs.md</a> - System Architecture");
+        this.addLine("  [WAIT]  Project_Beta - In Development");
+    }
+
+    showLinks() {
+        this.addLine("EXTERNAL NODES:", 'terminal-info');
+        this.addLine("  <a href='https://github.com/tobywritescode' target='_blank'>github.exe</a>");
+        this.addLine("  <a href='https://linkedin.com/in/tobynichol' target='_blank'>linkedin.sys</a>");
+        this.addLine("  <a href='https://github.com/tobywritescode/tobynichol' target='_blank'>source_code.bin</a>");
+    }
+
+    showContact() {
+        this.addLine("ESTABLISHING ENCRYPTED COMMS CHANNEL...", 'terminal-info');
+        this.addLine("COMMS OPEN AT: <a href='mailto:hello@tobynichol.com'>hello@tobynichol.com</a>");
+    }
+
+    clear() {
+        this.history.innerHTML = '';
+    }
+}
+
+// --- Initialize Everything ---
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('terminal-bg');
   if (container) {
     new FaultyTerminal(container);
   }
+  new TerminalCLI();
 });
