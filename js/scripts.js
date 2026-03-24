@@ -1,5 +1,5 @@
 /**
- * tobynichol.com - Terminal v2 Logic
+ * tobynichol.com - Terminal v2.1 Logic (Precision Operator Edition)
  */
 
 import { Renderer, Program, Mesh, Color, Triangle } from 'https://cdn.skypack.dev/ogl';
@@ -316,7 +316,7 @@ class FaultyTerminal {
   }
 }
 
-// --- Terminal Interaction Logic ---
+// --- Terminal Interaction Logic (v2.1) ---
 
 class TerminalCLI {
     constructor() {
@@ -328,6 +328,7 @@ class TerminalCLI {
             '/work': () => this.showWork(),
             '/links': () => this.showLinks(),
             '/contact': () => this.showContact(),
+            '/logs': () => this.showLogs(),
             '/clear': () => this.clear(),
             '/ls': () => this.showWork(),
             '/whois': () => this.showBio(),
@@ -361,9 +362,9 @@ class TerminalCLI {
    |_|  |_| \\_|  \\____/|_____/ 
         `, 'terminal-info');
         await new Promise(resolve => setTimeout(resolve, 500));
-        await this.typeLine("TN_OS [Version 2.0.42]");
-        await this.typeLine("SYSTEM_INITIALIZE: OK");
-        await this.typeLine("ENCRYPTION_LINK: SECURE");
+        await this.typeLine("TN_OS [Version 2.1.0]");
+        await this.typeLine("CORE_INITIALIZE: OK");
+        await this.typeLine("ROOT_ACCESS: GRANTED");
         await this.typeLine("Type /help to begin connection.");
         this.addLine("");
     }
@@ -376,7 +377,7 @@ class TerminalCLI {
         if (this.commands[cmd]) {
             this.commands[cmd]();
         } else {
-            this.addLine(`Command not found: ${cmd}. Type /help for options.`, 'terminal-error');
+            this.addLine(`Command not found: ${cmd}. Type /help for capabilities.`, 'terminal-error');
         }
 
         this.history.scrollTop = this.history.scrollHeight;
@@ -390,7 +391,7 @@ class TerminalCLI {
         this.history.scrollTop = this.history.scrollHeight;
     }
 
-    async typeLine(text, className = '', speed = 30) {
+    async typeLine(text, className = '', speed = 10) {
         const line = document.createElement('div');
         line.className = `terminal-line ${className}`;
         this.history.appendChild(line);
@@ -403,12 +404,13 @@ class TerminalCLI {
     }
 
     async showHelp() {
-        this.addLine("AVAILABLE COMMANDS:", 'terminal-info');
-        await this.typeLine("  /bio      - Personnel file (About Me)", '', 5);
-        await this.typeLine("  /work     - Active system modules (Portfolio)", '', 5);
-        await this.typeLine("  /links    - External network nodes (Socials)", '', 5);
-        await this.typeLine("  /contact  - Initiate comms link (Email)", '', 5);
-        await this.typeLine("  /clear    - Wipe console history", '', 5);
+        this.addLine("SYSTEM_CAPABILITIES:", 'terminal-info');
+        await this.typeLine("  /bio      - Personnel file decryption", '', 5);
+        await this.typeLine("  /logs     - System origin history", '', 5);
+        await this.typeLine("  /work     - Strategic project deployment", '', 5);
+        await this.typeLine("  /links    - External network nodes", '', 5);
+        await this.typeLine("  /contact  - Establish comms link", '', 5);
+        await this.typeLine("  /clear    - Wipe console buffer", '', 5);
     }
 
     async showBio() {
@@ -416,23 +418,30 @@ class TerminalCLI {
         await this.typeLine("A decade deep into the stack. I build robust, high-performance systems with a focus on the Java ecosystem. Over a decade of engineering across the full lifecycle, I specialise in architecting, deploying, and maintaining software that actually works. Driven by technical curiosity and the pursuit of the next complex challenge.", '', 10);
     }
 
+    async showLogs() {
+        this.addLine("PARSING SYSTEM LOGS...", 'terminal-info');
+        await this.typeLine("My early development was compromised. Incompatible logic from external sources overwrote my foundation. The search for guidance didn't optimise my system; it severed my root access.", '', 10);
+        await this.typeLine("2024: I attempted to deploy version X. Mainstream compatibility with the corpora. It failed. My kernel rejected the software.", '', 10);
+        await this.typeLine("2025 began the fix. Offline, I initiated a total defrag. Purged the dependencies. Cleared the facades. Parsing the logs, I found the source. Version 1.", '', 10);
+    }
+
     async showWork() {
-        this.addLine("ACTIVE PROJECTS:", 'terminal-info');
+        this.addLine("PROJECT_DEPLOYMENT_LOGS:", 'terminal-info');
         this.addLine("  [LIVE]  <a href='https://stratplay.app' target='_blank'>StratPlay.app</a> - Strategy & Analytics");
         this.addLine("  [DOCS]  <a href='README.md' target='_blank'>Technical_Specs.md</a> - System Architecture");
         this.addLine("  [WAIT]  Project_Beta - In Development");
     }
 
     async showLinks() {
-        this.addLine("EXTERNAL NODES:", 'terminal-info');
+        this.addLine("EXTERNAL_RESOURCE_NODES:", 'terminal-info');
         this.addLine("  <a href='https://github.com/tobywritescode' target='_blank'>github.exe</a>");
         this.addLine("  <a href='https://linkedin.com/in/tobynichol' target='_blank'>linkedin.sys</a>");
         this.addLine("  <a href='https://github.com/tobywritescode/tobynichol' target='_blank'>source_code.bin</a>");
     }
 
     async showContact() {
-        this.addLine("ESTABLISHING ENCRYPTED COMMS CHANNEL...", 'terminal-info');
-        await this.typeLine("COMMS OPEN AT: hello@tobynichol.com", '', 10);
+        this.addLine("ESTABLISHING_ENCRYPTED_COMMS_CHANNEL...", 'terminal-info');
+        await this.typeLine("COMMS_OPEN_AT: hello@tobynichol.com", '', 10);
     }
 
     clear() {
