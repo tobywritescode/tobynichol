@@ -365,7 +365,7 @@ export class TerminalCLI {
    |_|  |_| \\_|  \\____/|_____/ 
         `, 'terminal-info');
         await new Promise(resolve => setTimeout(resolve, 500));
-        await this.typeLine("TN_OS [Version 2.1.0]");
+        await this.typeLine("TN_OS [Version 1.0.0]");
         await this.typeLine("CORE_INITIALIZE: OK");
         await this.typeLine("ROOT_ACCESS: GRANTED");
         await this.typeLine("Type /help to begin connection.");
@@ -425,7 +425,7 @@ export class TerminalCLI {
     async showLogs() {
         this.addLine("PARSING SYSTEM LOGS...", 'terminal-info');
         await this.typeLine("My early development was compromised. Incompatible logic from external sources overwrote my foundation. The search for guidance didn't optimise my system; it severed my root access.", '', 10);
-        await this.typeLine("2024: I attempted to deploy version X. Mainstream compatibility with the corpora. It failed. My kernel rejected the software.", '', 10);
+        await this.typeLine("2024: I attempted to deploy version X. Mainstream compatibility with the machine. It failed. My kernel rejected the software.", '', 10);
         await this.typeLine("2025 began the fix. Offline, I initiated a total defrag. Purged the dependencies. Cleared the facades. Parsing the logs, I found the source. Version 1.", '', 10);
     }
 
