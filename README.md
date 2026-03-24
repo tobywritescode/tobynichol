@@ -38,7 +38,11 @@ The WebGL background from v1 remains the visual anchor:
 - `/work`: Active system modules (projects).
 - `/links`: External network nodes.
 - `/contact`: Establish comms link.
+- `/articles`: Access intelligence database (Briefings).
 - `/clear`: Wipe console buffer.
+
+## Intelligence Database
+Standalone tactical briefings designed for technical SEO and high-stakes knowledge transfer. Each briefing is a static, crawlable page that maintains the terminal aesthetic.
 
 ## Deployment
 Hosted on **Vercel** as a zero-config static project.

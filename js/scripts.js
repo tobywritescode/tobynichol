@@ -1,10 +1,10 @@
 /**
- * tobynichol.com - Terminal v2.1 Logic (Precision Operator Edition)
+ * tobynichol.com - Shared WebGL Background + CLI Core
  */
 
 import { Renderer, Program, Mesh, Color, Triangle } from 'https://cdn.skypack.dev/ogl';
 
-// --- WebGL Background Logic ---
+// --- WebGL Background Logic (Shared) ---
 const vertexShader = `
 attribute vec2 position;
 attribute vec2 uv;
@@ -207,7 +207,7 @@ function hexToRgb(hex) {
   return [((num >> 16) & 255) / 255, ((num >> 8) & 255) / 255, (num & 255) / 255];
 }
 
-class FaultyTerminal {
+export class FaultyTerminal {
   constructor(container, options = {}) {
     this.container = container;
     this.options = {
@@ -316,12 +316,14 @@ class FaultyTerminal {
   }
 }
 
-// --- Terminal Interaction Logic (v2.1) ---
+// --- CLI Terminal Logic (v2.1) ---
 
-class TerminalCLI {
+export class TerminalCLI {
     constructor() {
         this.history = document.getElementById('terminal-history');
         this.input = document.getElementById('command-input');
+        if (!this.history || !this.input) return;
+
         this.commands = {
             '/help': () => this.showHelp(),
             '/bio': () => this.showBio(),
@@ -329,6 +331,7 @@ class TerminalCLI {
             '/links': () => this.showLinks(),
             '/contact': () => this.showContact(),
             '/logs': () => this.showLogs(),
+            '/articles': () => this.showArticles(),
             '/clear': () => this.clear(),
             '/ls': () => this.showWork(),
             '/whois': () => this.showBio(),
@@ -409,6 +412,7 @@ class TerminalCLI {
         await this.typeLine("  /logs     - System origin history", '', 5);
         await this.typeLine("  /work     - Strategic project deployment", '', 5);
         await this.typeLine("  /links    - External network nodes", '', 5);
+        await this.typeLine("  /articles - Intelligence database (Briefings)", '', 5);
         await this.typeLine("  /contact  - Establish comms link", '', 5);
         await this.typeLine("  /clear    - Wipe console buffer", '', 5);
     }
@@ -439,6 +443,12 @@ class TerminalCLI {
         this.addLine("  <a href='https://github.com/tobywritescode/tobynichol' target='_blank'>source_code.bin</a>");
     }
 
+    async showArticles() {
+        this.addLine("ACCESSING INTELLIGENCE DATABASE...", 'terminal-info');
+        this.addLine("  [BRIEFING_01] <a href='articles/zero-dependencies.html'>Zero Dependencies. Raw WebGL.</a>");
+        await this.typeLine("  [SECURE] More briefings pending decryption.", '', 5);
+    }
+
     async showContact() {
         this.addLine("ESTABLISHING_ENCRYPTED_COMMS_CHANNEL...", 'terminal-info');
         await this.typeLine("COMMS_OPEN_AT: hello@tobynichol.com", '', 10);
@@ -449,11 +459,14 @@ class TerminalCLI {
     }
 }
 
-// --- Initialize Everything ---
+// --- Auto-Initialize on entry points ---
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('terminal-bg');
   if (container) {
     new FaultyTerminal(container);
   }
-  new TerminalCLI();
+  
+  if (document.getElementById('terminal')) {
+    new TerminalCLI();
+  }
 });

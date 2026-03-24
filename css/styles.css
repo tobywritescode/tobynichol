@@ -63,6 +63,87 @@ body:has(#terminal:hover) #terminal-bg {
   align-items: center;
 }
 
+/* BRIEFING MODE STYLES */
+.briefing-mode {
+  overflow-y: auto;
+  height: auto;
+}
+
+.briefing-mode .hud-wrapper {
+  height: auto;
+  min-height: 100vh;
+  padding: 4rem 0;
+  display: block; /* Overwrite flex for scrolling */
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.briefing-container {
+  height: auto;
+  min-height: 80vh;
+  padding: 3rem;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--accent-faint);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.back-link:hover {
+  color: var(--accent-color);
+  transform: translateX(-5px);
+}
+
+.back-link i {
+  width: 14px;
+  height: 14px;
+}
+
+.briefing-content {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.briefing-content h3 {
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent-color);
+  margin-top: 1.5rem;
+  border-left: 2px solid var(--accent-color);
+  padding-left: 1.25rem;
+}
+
+.impact-text {
+  font-size: 1.15rem;
+  color: #fff;
+  line-height: 1.7;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 2rem;
+  margin-bottom: 1rem;
+}
+
+.closing-statement {
+  margin-top: 3rem;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--accent-faint);
+  font-style: italic;
+  color: var(--accent-color);
+  line-height: 1.6;
+}
+
 #terminal {
   width: 100%;
   max-width: 800px;
@@ -230,15 +311,20 @@ header h1 {
   
   .hud-wrapper.single-module-layout {
     width: 95vw;
-    height: 90vh;
+    height: auto;
     margin: 2rem auto;
   }
 
   #terminal {
     padding: 1.5rem;
+    height: auto;
   }
 
   header h1 {
     font-size: 1.8rem;
+  }
+
+  .briefing-container {
+    padding: 1.5rem;
   }
 }
