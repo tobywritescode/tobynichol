@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} // Tactical Briefing {{ID}}</title>
+    <meta name="description" content="{{DESCRIPTION}}">
+    
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "{{TITLE}}",
+      "description": "{{DESCRIPTION}}",
+      "author": {
+        "@type": "Person",
+        "name": "Toby Nichol"
+      },
+      "datePublished": "{{DATE}}"
+    }
+    </script>
+</head>
+<body class="briefing-mode">
+    <main class="hud-wrapper single-module-layout">
+        <article class="hud-module briefing-container">
+            <span class="module-meta">BRIEFING_ID: {{ID}} // CATEGORY: {{CATEGORY}}</span>
+            
+            <header id="terminal-header">
+                <a href="../index.html" class="back-link"><i data-lucide="chevron-left"></i> RETURN_TO_ROOT</a>
+                <h1>{{TITLE}}</h1>
+                <p class="subtitle">{{SUBTITLE}}</p>
+            </header>
+
+            <div class="briefing-content">
+                {{CONTENT}}
+            </div>
+        </article>
+    </main>
+
+    <div id="terminal-bg" aria-hidden="true"></div>
+
+    <script type="module" src="../js/scripts.js"></script>
+    <script>
+      lucide.createIcons();
+    </script>
+</body>
+</html>

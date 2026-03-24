@@ -445,7 +445,20 @@ export class TerminalCLI {
 
     async showArticles() {
         this.addLine("ACCESSING INTELLIGENCE DATABASE...", 'terminal-info');
-        this.addLine("  [BRIEFING_01] <a href='articles/zero-dependencies.html'>Zero Dependencies. Raw WebGL.</a>");
+        try {
+            const response = await fetch('articles.json');
+            const articles = await response.json();
+            
+            if (articles.length === 0) {
+                this.addLine("  [EMPTY] No briefings found in database.");
+            } else {
+                articles.forEach(art => {
+                    this.addLine(`  [BRIEFING_${art.id}] <a href='${art.path}'>${art.title}</a>`);
+                });
+            }
+        } catch (e) {
+            this.addLine("  [ERROR] Could not connect to database.", 'terminal-error');
+        }
         await this.typeLine("  [SECURE] More briefings pending decryption.", '', 5);
     }
 

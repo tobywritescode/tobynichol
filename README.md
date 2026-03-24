@@ -42,7 +42,18 @@ The WebGL background from v1 remains the visual anchor:
 - `/clear`: Wipe console buffer.
 
 ## Intelligence Database
-Standalone tactical briefings designed for technical SEO and high-stakes knowledge transfer. Each briefing is a static, crawlable page that maintains the terminal aesthetic.
+Standalone tactical briefings designed for technical SEO and high-stakes knowledge transfer.
+
+### The Briefing Compiler (`compile.js`)
+Instead of bloated toolchains, the site uses a custom, zero-dependency Node.js script to generate static briefings:
+1.  **Source**: Raw text files in `/briefings/` with technical metadata.
+2.  **Template**: A master HTML/WebGL structure in `/assets/template.html`.
+3.  **Output**: SEO-optimized static pages in `/articles/` and an `articles.json` index for the CLI.
+
+To generate new briefings:
+```bash
+node compile.js
+```
 
 ## Deployment
 Hosted on **Vercel** as a zero-config static project.
