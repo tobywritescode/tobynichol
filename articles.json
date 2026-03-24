@@ -4,5 +4,11 @@
     "title": "Zero Dependencies. Raw WebGL.",
     "category": "ARCHITECTURE",
     "path": "articles/01-zero-dependencies.html"
+  },
+  {
+    "id": "02",
+    "title": "\"Vibe Coding\" is a Threat Vector",
+    "category": "SECURITY",
+    "path": "articles/02-vibe-coding.html"
   }
 ]
