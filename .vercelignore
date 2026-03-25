@@ -1,0 +1,15 @@
+# Vercel Ignore File
+# Prevent the deployment of build tools and raw source files to the public server.
+
+# The Compiler
+compile.js
+
+# Raw Source Files
+briefings/
+
+# Templates
+assets/template.html
+
+# IDE/System
+.idea/
+.DS_Store
