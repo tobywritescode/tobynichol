@@ -10,5 +10,17 @@
     "title": "\"Vibe Coding\" is a Threat Vector",
     "category": "SECURITY",
     "path": "articles/02-vibe-coding.html"
+  },
+  {
+    "id": "03",
+    "title": "The Homogenized Web",
+    "category": "DESIGN",
+    "path": "articles/03-homogenized-web.html"
+  },
+  {
+    "id": "04",
+    "title": "The Architecture of Vulnerability",
+    "category": "SECURITY",
+    "path": "articles/04-architecture-vulnerability.html"
   }
 ]
