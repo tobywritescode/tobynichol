@@ -1,5 +1,5 @@
 /**
- * tobynichol.com - Shared WebGL Background + CLI Core
+ * tobynichol.computer - Shared WebGL Background + CLI Core
  */
 
 import { Renderer, Program, Mesh, Color, Triangle } from 'https://cdn.skypack.dev/ogl';
@@ -472,7 +472,7 @@ export class TerminalCLI {
 
     async showContact() {
         this.addLine("ESTABLISHING_ENCRYPTED_COMMS_CHANNEL...", 'terminal-info');
-        await this.typeLine("COMMS_OPEN_AT: hello@tobynichol.com", '', 10);
+        await this.typeLine("COMMS_OPEN_AT: hello@tobynichol.computer", '', 10);
     }
 
     clear() {

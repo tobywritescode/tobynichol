@@ -1,4 +1,4 @@
-# tobynichol.com // Interactive Terminal HUD v2.0
+# tobynichol.computer // Interactive Terminal HUD v2.0
 
 A high-performance, framework-less personal landing page evolved into a fully interactive Command Line Interface (CLI).
 
