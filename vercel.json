@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/telemetry",
+      "destination": "https://eth-telemetry-grid.vercel.app/index.html"
+    },
+    {
+      "source": "/telemetry/:path*",
+      "destination": "https://eth-telemetry-grid.vercel.app/:path*"
+    }
+  ]
+}
