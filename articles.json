@@ -22,5 +22,11 @@
     "title": "The Architecture of Vulnerability",
     "category": "SECURITY",
     "path": "articles/04-architecture-vulnerability.html"
+  },
+  {
+    "id": "05",
+    "title": "Financial Sovereignty. The Ethereum Grid.",
+    "category": "BLOCKCHAIN",
+    "path": "articles/05-financial-sovereignty-ethereum.html"
   }
 ]

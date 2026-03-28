@@ -440,6 +440,7 @@ export class TerminalCLI {
     async showWork() {
         this.addLine("PROJECT_DEPLOYMENT_LOGS:", 'terminal-info');
         this.addLine(`  [LIVE]  <a href='https://stratplay.app' target='_blank'>${ICONS.external} StratPlay.app</a> - Strategy & Analytics`);
+        this.addLine(`  [LIVE]  <a href='https://tobynichol.computer/telemetry' target='_blank'>${ICONS.external} ETH_Telemetry_Grid</a> - Blockchain Intelligence`);
         this.addLine(`  [DOCS]  <a href='README.md' target='_blank'>${ICONS.code} Technical_Specs.md</a> - System Architecture`);
         this.addLine("  [WAIT]  Project_Beta - In Development");
     }
