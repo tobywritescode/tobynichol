@@ -2,7 +2,7 @@
  * tobynichol.computer - Shared WebGL Background + CLI Core
  */
 
-import { Renderer, Program, Mesh, Color, Triangle } from 'https://cdn.skypack.dev/ogl';
+import { Renderer, Program, Mesh, Color, Triangle } from 'https://esm.sh/ogl';
 
 // --- WebGL Background Logic (Shared) ---
 const vertexShader = `
