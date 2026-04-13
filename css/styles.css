@@ -23,7 +23,8 @@ body {
   width: 100vw;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start; 
+  padding-top: 5vh;
   overflow: hidden; 
 }
 
@@ -44,7 +45,7 @@ body {
 }
 
 /* Dimming Effect Logic */
-body:has(#terminal:hover) #terminal-bg {
+body:has(#terminal.maximized) #terminal-bg {
   opacity: 0.4;
   filter: blur(6px);
 }
@@ -60,7 +61,7 @@ body:has(#terminal:hover) #terminal-bg {
 .hud-wrapper.single-module-layout {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
 }
 
 /* BRIEFING MODE STYLES */
@@ -144,16 +145,118 @@ body:has(#terminal:hover) #terminal-bg {
   line-height: 1.6;
 }
 
+.terminal-stack {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sub-terminals {
+  display: flex;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.sub-module {
+  flex: 1;
+  max-height: 80px; /* Compact initial height */
+  /* overflow: hidden; removed to prevent clipping of absolute elements like .module-meta and corners */
+  transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 1.25rem 1.75rem;
+}
+
+.sub-module:hover {
+  max-height: 400px;
+  padding: 1.75rem;
+}
+
+.sub-title {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-color);
+  margin: 0;
+  transition: all 0.5s ease;
+  flex-shrink: 0;
+}
+
+.sub-module:hover .sub-title {
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 0.75rem;
+}
+
+.terminal-content {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease;
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  line-height: 1.6;
+  height: 0;
+  overflow: hidden;
+}
+
+.sub-module:hover .terminal-content {
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+  overflow-y: auto;
+}
+
+.work-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.work-links a {
+  color: var(--accent-color);
+  text-decoration: none;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.work-links a:hover {
+  color: #fff;
+  text-shadow: 0 0 8px var(--accent-color);
+}
+
+.work-links svg {
+  opacity: 0.7;
+}
+
+/* Update main terminal to work in stack */
 #terminal {
   width: 100%;
   max-width: 800px;
-  height: 100%;
-  padding: 2.5rem;
+  height: auto;
+  max-height: 110px; 
+  padding: 1.5rem 2.5rem;
   display: flex;
   flex-direction: column;
+  transition: max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), padding 0.6s ease;
+}
+
+#terminal.maximized {
+  max-height: 85vh; /* Expand to wrapper height */
+  padding: 2.5rem;
 }
 
 #terminal-header {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+  transition: all 0.5s ease;
+  flex-shrink: 0; /* Header stays same size */
+}
+
+#terminal.maximized #terminal-header {
   margin-bottom: 2rem;
   border-bottom: 1px solid var(--glass-border);
   padding-bottom: 1rem;
@@ -161,14 +264,26 @@ body:has(#terminal:hover) #terminal-bg {
 
 #terminal-history {
   flex: 1;
-  overflow-y: auto;
-  margin-bottom: 1.5rem;
+  overflow: hidden; /* Manage content overflow locally */
+  margin-bottom: 0;
   font-size: 0.95rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   scrollbar-width: thin;
   scrollbar-color: var(--accent-faint) transparent;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease;
+  height: 0; /* Collapsed */
+}
+
+#terminal.maximized #terminal-history {
+  overflow-y: auto; /* Enable scrolling only on hover */
+  margin-bottom: 1.5rem;
+  opacity: 1;
+  visibility: visible;
+  height: auto;
 }
 
 #terminal-history p {
@@ -181,8 +296,61 @@ body:has(#terminal:hover) #terminal-bg {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  padding-top: 0;
+  border-top: none;
+  opacity: 0;
+  visibility: hidden;
+  height: 0;
+  overflow: hidden;
+  transition: opacity 0.4s ease, padding 0.4s ease;
+}
+
+#terminal.maximized #terminal-prompt {
   padding-top: 1rem;
   border-top: 1px solid var(--glass-border);
+  opacity: 1;
+  visibility: visible;
+  height: auto;
+}
+
+.maximize-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--accent-faint);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 30;
+  border: 1px solid transparent;
+}
+
+.maximize-btn:hover {
+  color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--glass-border);
+}
+
+.sub-module .maximize-btn {
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.maximize-btn .minimize-icon {
+  display: none;
+}
+
+.maximized .maximize-btn .maximize-icon {
+  display: none;
+}
+
+.maximized .maximize-btn .minimize-icon {
+  display: block;
 }
 
 .prompt-user {

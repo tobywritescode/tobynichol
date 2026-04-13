@@ -3,7 +3,7 @@
 A high-performance, framework-less personal landing page evolved into a fully interactive Command Line Interface (CLI).
 
 ## Architecture & Philosophy
-Version 2 moves from a "Passive HUD" to an "Active Terminal" experience. The site is a single-module intelligence console that requires user interaction (`/help`) to decrypt personnel files and project data. It maintains the "Minimalist-Heavy" philosophy: zero frameworks, zero build steps, and raw WebGL power.
+Version 2 moves from a "Passive HUD" to an "Active Terminal" experience. The site is a single-module intelligence console that requires user interaction (`"help"`) to decrypt personnel files and project data. It maintains the "Minimalist-Heavy" philosophy: zero frameworks, zero build steps, and raw WebGL power.
 
 ## Tech Stack
 - **Engine**: [OGL](https://github.com/oframe/ogl) (Minimal WebGL library)
@@ -33,13 +33,15 @@ The WebGL background from v1 remains the visual anchor:
 - **Focus Dimming**: The background subtly dims and blurs when the terminal is hovered, using the CSS `:has()` selector.
 
 ## Available Commands
-- `/help`: List system capabilities.
-- `/bio`: Personnel file decryption.
-- `/work`: Active system modules (projects).
-- `/links`: External network nodes.
-- `/contact`: Establish comms link.
-- `/articles`: Access intelligence database (Briefings).
-- `/clear`: Wipe console buffer.
+Commands can be typed with or without quotes or a leading slash (e.g., `help`, `"help"`, or `/help`).
+
+- `"help"`: List system capabilities.
+- `"bio"`: Personnel file decryption.
+- `"work"`: Active system modules (projects).
+- `"links"`: External network nodes.
+- `"contact"`: Establish comms link.
+- `"articles"`: Access intelligence database (Briefings).
+- `"clear"`: Wipe console buffer.
 
 ## Intelligence Database
 Standalone tactical briefings designed for technical SEO and high-stakes knowledge transfer.

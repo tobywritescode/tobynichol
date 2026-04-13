@@ -2,7 +2,7 @@
  * tobynichol.computer - Shared WebGL Background + CLI Core
  */
 
-import { Renderer, Program, Mesh, Color, Triangle } from 'https://esm.sh/ogl';
+import { Renderer, Program, Mesh, Color, Triangle, Texture } from 'https://esm.sh/ogl';
 
 // --- WebGL Background Logic (Shared) ---
 const vertexShader = `
@@ -37,6 +37,7 @@ uniform float uUseMouse;
 uniform float uPageLoadProgress;
 uniform float uUsePageLoadAnimation;
 uniform float uBrightness;
+uniform sampler2D uTexture;
 
 float time;
 
@@ -92,19 +93,47 @@ float pattern(vec2 p, out vec2 q, out vec2 r) {
 }
 
 float digit(vec2 p){
-    vec2 grid = uGridMul * 15.0;
+    vec2 grid = uGridMul * 40.0; // Reverted to 40.0 for smaller pixels
     vec2 s = floor(p * grid) / grid;
+    
+    // Calculate aspect ratios for full screen coverage
+    float screenAspect = iResolution.x / iResolution.y;
+    // We'll use "cover" logic: scale the texture so it fills the screen, cropping the edges
+    vec2 centeredUv = s / uScale;
+    
+    centeredUv.x *= screenAspect;
+    centeredUv.x -= (screenAspect - 1.0) * 0.5;
+    
+    // Add floating/jitter effect to texture coordinates
+    vec2 q_noise, r_noise;
+    float jitter = pattern(s * 0.05 + time * 0.05, q_noise, r_noise);
+    centeredUv += (q_noise - 0.5) * 0.035; // Slight adjustment to jitter for smaller pixels
+    
+    // Sample texture for intensity
+    vec4 texColor = texture2D(uTexture, centeredUv);
+    float lum = dot(texColor.rgb, vec3(0.299, 0.587, 0.114));
+    
+    // If out of bounds of the actual image, just use procedural noise
+    if(centeredUv.x < 0.0 || centeredUv.x > 1.0 || centeredUv.y < 0.0 || centeredUv.y > 1.0) {
+        lum = 0.0;
+    }
+    
     p = p * grid;
     vec2 q, r;
-    float intensity = pattern(s * 0.1, q, r) * 1.3 - 0.03;
+    // Base procedural intensity mixed with image luminance
+    float procedural = pattern(s * 0.1, q, r) * 0.4;
+    // Ensure there's always a base level of "broken scanning" pixels across the whole screen
+    float intensity = (lum * 1.8 + procedural) - 0.1;
     
     if(uUseMouse > 0.5){
         vec2 mouseWorld = uMouse * uScale;
         float distToMouse = distance(s, mouseWorld);
-        float mouseInfluence = exp(-distToMouse * 8.0) * uMouseStrength * 10.0;
-        intensity += mouseInfluence;
+        // Large falloff (4.0) and even fainter strength (1.0)
+        float mouseInfluence = exp(-distToMouse * 4.0) * uMouseStrength * 1.0;
+        // Make it "like static" by mixing with procedural noise
+        intensity += mouseInfluence * (0.4 + procedural * 0.6);
         
-        float ripple = sin(distToMouse * 20.0 - iTime * 5.0) * 0.1 * mouseInfluence;
+        float ripple = sin(distToMouse * 15.0 - iTime * 3.0) * 0.02 * mouseInfluence;
         intensity += ripple;
     }
     
@@ -120,18 +149,16 @@ float digit(vec2 p){
     p = fract(p);
     p *= uDigitSize;
     
-    float px5 = p.x * 5.0;
-    float py5 = (1.0 - p.y) * 5.0;
-    float x = fract(px5);
-    float y = fract(py5);
+    // Refine the dot shape for the smaller grid
+    float dist = distance(p, vec2(0.5));
+    float dotShape = smoothstep(0.45, 0.05, dist);
     
-    float i = floor(py5) - 2.0;
-    float j = floor(px5) - 2.0;
-    float n = i * i + j * j;
-    float f = n * 0.0625;
+    // Remove binary step to allow for greyscale/detail
+    // We use a slight threshold to keep the background clean, but let intensity drive brightness
+    float brightness = clamp(intensity * 1.2, 0.0, 1.0) * dotShape;
     
-    float isOn = step(0.1, intensity - f);
-    float brightness = isOn * (0.2 + y * 0.8) * (0.75 + x * 0.25);
+    // Add back some procedural sparkle/jitter to the brightness
+    brightness *= (0.7 + procedural * 0.3);
     
     return step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0) * brightness;
 }
@@ -268,11 +295,19 @@ export class FaultyTerminal {
         uUseMouse: { value: 1.0 },
         uPageLoadProgress: { value: 0 },
         uUsePageLoadAnimation: { value: 1.0 },
-        uBrightness: { value: this.options.brightness }
+        uBrightness: { value: this.options.brightness },
+        uTexture: { value: new Texture(this.gl, { generateMipmaps: false }) }
       }
     });
 
     this.mesh = new Mesh(this.gl, { geometry, program: this.program });
+
+    // Load texture image
+    const image = new Image();
+    image.src = 'assets/me.png';
+    image.onload = () => {
+      this.program.uniforms.uTexture.value.image = image;
+    };
 
     window.addEventListener('resize', () => this.resize(), false);
     this.resize();
@@ -333,18 +368,16 @@ export class TerminalCLI {
         if (!this.history || !this.input) return;
 
         this.commands = {
-            '/help': () => this.showHelp(),
-            '/bio': () => this.showBio(),
-            '/work': () => this.showWork(),
-            '/links': () => this.showLinks(),
-            '/contact': () => this.showContact(),
-            '/logs': () => this.showLogs(),
-            '/articles': () => this.showArticles(),
-            '/clear': () => this.clear(),
-            '/ls': () => this.showWork(),
-            '/whois': () => this.showBio(),
             'help': () => this.showHelp(),
-            'clear': () => this.clear()
+            'bio': () => this.showBio(),
+            'work': () => this.showWork(),
+            'links': () => this.showLinks(),
+            'contact': () => this.showContact(),
+            'logs': () => this.showLogs(),
+            'articles': () => this.showArticles(),
+            'clear': () => this.clear(),
+            'ls': () => this.showWork(),
+            'whois': () => this.showBio()
         };
 
         this.init();
@@ -376,7 +409,7 @@ export class TerminalCLI {
         await this.typeLine("TN_OS [Version 2.1.0]");
         await this.typeLine("CORE_INITIALIZE: OK");
         await this.typeLine("ROOT_ACCESS: GRANTED");
-        await this.typeLine("Type /help to begin connection.");
+        await this.typeLine("Type \"help\" to begin connection.");
         this.addLine("");
     }
 
@@ -385,10 +418,16 @@ export class TerminalCLI {
         
         this.addLine(`<span class="prompt-user">[USER@TOBYNICHOL]:~ ></span> ${cmd}`);
 
-        if (this.commands[cmd]) {
-            this.commands[cmd]();
+        // Strip leading/trailing quotes and leading slash
+        let cleanCmd = cmd.replace(/^["']|["']$/g, '');
+        if (cleanCmd.startsWith('/')) {
+            cleanCmd = cleanCmd.substring(1);
+        }
+
+        if (this.commands[cleanCmd]) {
+            this.commands[cleanCmd]();
         } else {
-            this.addLine(`Command not found: ${cmd}. Type /help for capabilities.`, 'terminal-error');
+            this.addLine(`Command not found: ${cmd}. Type \"help\" for capabilities.`, 'terminal-error');
         }
 
         this.history.scrollTop = this.history.scrollHeight;
@@ -416,13 +455,13 @@ export class TerminalCLI {
 
     async showHelp() {
         this.addLine("SYSTEM_CAPABILITIES:", 'terminal-info');
-        await this.typeLine("  /bio      - Personnel file decryption", '', 5);
-        await this.typeLine("  /logs     - System origin history", '', 5);
-        await this.typeLine("  /work     - Strategic project deployment", '', 5);
-        await this.typeLine("  /links    - External network nodes", '', 5);
-        await this.typeLine("  /articles - Intelligence database (Briefings)", '', 5);
-        await this.typeLine("  /contact  - Establish comms link", '', 5);
-        await this.typeLine("  /clear    - Wipe console buffer", '', 5);
+        await this.typeLine("  \"bio\"      - Personnel file decryption", '', 5);
+        await this.typeLine("  \"logs\"     - System origin history", '', 5);
+        await this.typeLine("  \"work\"     - Strategic project deployment", '', 5);
+        await this.typeLine("  \"links\"    - External network nodes", '', 5);
+        await this.typeLine("  \"articles\" - Intelligence database (Briefings)", '', 5);
+        await this.typeLine("  \"contact\"  - Establish comms link", '', 5);
+        await this.typeLine("  \"clear\"    - Wipe console buffer", '', 5);
     }
 
     async showBio() {
@@ -491,4 +530,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (document.getElementById('terminal')) {
     new TerminalCLI();
   }
+
+  // Handle Maximize Buttons
+  document.querySelectorAll('.maximize-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const module = btn.closest('.hud-module');
+        if (module) {
+            module.classList.toggle('maximized');
+            
+            // If it's the main terminal, focus the input
+            if (module.id === 'terminal' && module.classList.contains('maximized')) {
+                const input = module.querySelector('#command-input');
+                if (input) setTimeout(() => input.focus(), 600);
+            }
+        }
+    });
+  });
 });
