@@ -103,6 +103,7 @@ float digit(vec2 p){
     
     centeredUv.x *= screenAspect;
     centeredUv.x -= (screenAspect - 1.0) * 0.5;
+    centeredUv.x += 0.002; // Subtle nudge to fix centering
     
     // Add floating/jitter effect to texture coordinates
     vec2 q_noise, r_noise;
