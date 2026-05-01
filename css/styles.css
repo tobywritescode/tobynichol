@@ -501,24 +501,37 @@ header h1 {
     flex-direction: column;
   }
 
-  /* Always-expanded panels — hover not usable on touch */
+  /* Remove height cap; neutralise desktop hover expansion */
   .sub-module,
   .sub-module:hover {
     max-height: none;
     padding: 1.25rem 1.5rem;
+    cursor: pointer;
   }
 
-  /* Show content without hover */
-  .terminal-content {
+  /* Disable CSS :hover reveal — tap handled by JS */
+  .sub-module:hover .terminal-content {
+    opacity: 0;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .sub-module:hover .sub-title {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  /* Tap-expanded state */
+  .sub-module.expanded .terminal-content {
     opacity: 1;
     visibility: visible;
     height: auto;
     overflow: visible;
   }
 
-  /* Always show the title divider */
-  .sub-module .sub-title,
-  .sub-module:hover .sub-title {
+  .sub-module.expanded .sub-title {
     margin-bottom: 1rem;
     border-bottom: 1px solid var(--glass-border);
     padding-bottom: 0.75rem;

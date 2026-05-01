@@ -556,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const module = btn.closest('.hud-module');
         if (module) {
             module.classList.toggle('maximized');
-            
+
             // If it's the main terminal, focus the input
             if (module.id === 'terminal' && module.classList.contains('maximized')) {
                 const input = module.querySelector('#command-input');
@@ -565,4 +565,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
   });
+
+  // Mobile: tap to expand/collapse sub-modules
+  if (window.innerWidth < 768 || navigator.maxTouchPoints > 0) {
+    document.querySelectorAll('.sub-module').forEach(module => {
+      module.addEventListener('click', (e) => {
+        if (e.target.closest('a')) return;
+        module.classList.toggle('expanded');
+      });
+    });
+  }
 });
