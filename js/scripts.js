@@ -264,8 +264,15 @@ export class FaultyTerminal {
   }
 
   init() {
-    this.renderer = new Renderer({ 
-      dpr: Math.min(window.devicePixelRatio, 2),
+    const isMobile = window.innerWidth < 768 || navigator.maxTouchPoints > 0;
+    this.isMobile = isMobile;
+    this.lastFrameTime = 0;
+    this.paused = false;
+
+    if (isMobile) this.options.chromaticAberration = 0;
+
+    this.renderer = new Renderer({
+      dpr: isMobile ? 1 : Math.min(window.devicePixelRatio, 2),
       alpha: true
     });
     this.gl = this.renderer.gl;
@@ -293,9 +300,9 @@ export class FaultyTerminal {
         uTint: { value: new Color(tintVec[0], tintVec[1], tintVec[2]) },
         uMouse: { value: new Float32Array([0.5, 0.5]) },
         uMouseStrength: { value: this.options.mouseStrength },
-        uUseMouse: { value: 1.0 },
+        uUseMouse: { value: isMobile ? 0.0 : 1.0 },
         uPageLoadProgress: { value: 0 },
-        uUsePageLoadAnimation: { value: 1.0 },
+        uUsePageLoadAnimation: { value: isMobile ? 0.0 : 1.0 },
         uBrightness: { value: this.options.brightness },
         uTexture: { value: new Texture(this.gl, { generateMipmaps: false }) }
       }
@@ -313,10 +320,16 @@ export class FaultyTerminal {
     window.addEventListener('resize', () => this.resize(), false);
     this.resize();
 
-    window.addEventListener('mousemove', (e) => {
-      const rect = this.container.getBoundingClientRect();
-      this.mouse.x = (e.clientX - rect.left) / rect.width;
-      this.mouse.y = 1 - (e.clientY - rect.top) / rect.height;
+    if (!isMobile) {
+      window.addEventListener('mousemove', (e) => {
+        const rect = this.container.getBoundingClientRect();
+        this.mouse.x = (e.clientX - rect.left) / rect.width;
+        this.mouse.y = 1 - (e.clientY - rect.top) / rect.height;
+      });
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      this.paused = document.hidden;
     });
 
     requestAnimationFrame((t) => this.update(t));
@@ -333,6 +346,10 @@ export class FaultyTerminal {
 
   update(t) {
     requestAnimationFrame((t) => this.update(t));
+
+    if (this.paused) return;
+    if (this.isMobile && t - this.lastFrameTime < 33) return; // ~30fps cap on mobile
+    this.lastFrameTime = t;
 
     if (this.loadAnimationStart === 0) this.loadAnimationStart = t;
     

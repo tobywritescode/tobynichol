@@ -476,7 +476,7 @@ header h1 {
     overflow-y: auto;
     align-items: flex-start;
   }
-  
+
   .hud-wrapper.single-module-layout {
     width: 95vw;
     height: auto;
@@ -494,5 +494,33 @@ header h1 {
 
   .briefing-container {
     padding: 1.5rem;
+  }
+
+  /* Stack sub-terminals vertically */
+  .sub-terminals {
+    flex-direction: column;
+  }
+
+  /* Always-expanded panels — hover not usable on touch */
+  .sub-module,
+  .sub-module:hover {
+    max-height: none;
+    padding: 1.25rem 1.5rem;
+  }
+
+  /* Show content without hover */
+  .terminal-content {
+    opacity: 1;
+    visibility: visible;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Always show the title divider */
+  .sub-module .sub-title,
+  .sub-module:hover .sub-title {
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 0.75rem;
   }
 }
