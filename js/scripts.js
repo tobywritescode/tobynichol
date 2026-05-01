@@ -484,7 +484,7 @@ export class TerminalCLI {
 
     async showBio() {
         this.addLine("DECRYPTING PERSONNEL FILE...", 'terminal-info');
-        await this.typeLine("A decade deep into the stack. I build robust, high-performance systems with a focus on the Java ecosystem — architecting, deploying, and maintaining software that actually works, across the full engineering lifecycle. Driven by technical curiosity and the pursuit of the next complex challenge.", '', 10);
+        await this.typeLine("A decade deep into the stack. I build robust, high-performance systems with a focus on the Java ecosystem, architecting, deploying, and maintaining software that actually works across the full engineering lifecycle. Driven by technical curiosity and the pursuit of the next complex challenge.", '', 10);
     }
 
     async showLogs() {
