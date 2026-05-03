@@ -159,6 +159,44 @@ body:has(#terminal.maximized) #terminal-bg {
   width: 100%;
 }
 
+@media (min-width: 769px) {
+  .sub-terminals {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      "about work"
+      "about contact"
+      "about .";
+    column-gap: 1.5rem;
+    row-gap: 0.75rem;
+  }
+
+  #terminal-about { grid-area: about; }
+  #terminal-work { grid-area: work; }
+  #terminal-contact { grid-area: contact; }
+
+  /* About is the primary intro panel - always expanded on desktop */
+  #terminal-about,
+  #terminal-about:hover {
+    max-height: none;
+    padding: 1.75rem;
+  }
+
+  #terminal-about .sub-title {
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 0.75rem;
+  }
+
+  #terminal-about .terminal-content {
+    opacity: 1;
+    visibility: visible;
+    height: auto;
+    max-height: none;
+  }
+}
+
 .sub-module {
   flex: 1;
   max-height: 80px; /* Compact initial height */
@@ -203,6 +241,7 @@ body:has(#terminal.maximized) #terminal-bg {
   opacity: 1;
   visibility: visible;
   height: auto;
+  max-height: 280px;
   overflow-y: auto;
 }
 
