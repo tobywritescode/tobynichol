@@ -375,7 +375,7 @@ export class TerminalCLI {
             }
         });
 
-        this.bootSequence();
+        this.bootPromise = this.bootSequence();
     }
 
     async bootSequence() {
@@ -509,8 +509,9 @@ document.addEventListener('DOMContentLoaded', () => {
     new FaultyTerminal(container);
   }
   
+  let cli = null;
   if (document.getElementById('terminal')) {
-    new TerminalCLI();
+    cli = new TerminalCLI();
   }
 
   // Handle Maximize Buttons
@@ -541,15 +542,21 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   } else {
-    initFloatingMode();
+    initFloatingMode(cli);
   }
 });
 
-function initFloatingMode() {
+function initFloatingMode(cli) {
+  // Floating windows are only for the homepage HUD — briefing pages have their own single-column layout.
+  if (document.body.classList.contains('briefing-mode')) return;
+
   const wrapper = document.querySelector('.hud-wrapper');
   if (!wrapper) return;
   const modules = Array.from(document.querySelectorAll('.hud-module'));
   if (!modules.length) return;
+
+  // Gate sub-modules invisible before any paint — paired with the body.intro-active CSS rule.
+  document.body.classList.add('intro-active');
 
   let zCounter = 100;
 
@@ -568,6 +575,8 @@ function initFloatingMode() {
       mod.style.width = `${captured[i].width}px`;
       mod.style.zIndex = String(zCounter++);
     });
+
+    runIntroSequence(modules, cli);
   });
 
   // Drag handling — header strip only, with movement threshold so clicks/hovers still work.
@@ -668,4 +677,45 @@ function initFloatingMode() {
       mod.style.top = `${Math.max(0, Math.min(window.innerHeight - h, top))}px`;
     });
   });
+}
+
+async function runIntroSequence(modules, cli) {
+  const mainTerminal = document.getElementById('terminal');
+  const maxBtn = mainTerminal?.querySelector('.maximize-btn');
+  if (!mainTerminal || !maxBtn) return;
+
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const subModules = modules.filter((m) => m.classList.contains('sub-module'));
+
+  // Open the main terminal (programmatic click fires both the toggle and snap-to-center handlers).
+  maxBtn.click();
+
+  // Let the boot animation play out inside the now-maximized terminal.
+  if (cli && cli.bootPromise) {
+    try { await cli.bootPromise; } catch (_) {}
+  } else {
+    await wait(1400);
+  }
+
+  await wait(500);
+
+  // Cascade sub-modules into view.
+  for (const mod of subModules) {
+    mod.classList.add('intro-revealed');
+    await wait(220);
+  }
+
+  await wait(900);
+
+  // Minimize the main terminal back to its floating header position.
+  maxBtn.click();
+
+  await wait(700);
+  document.body.classList.remove('intro-active');
+  document.body.classList.add('intro-complete');
+
+  // Stop the maximize-button pulse the first time the user re-opens the terminal.
+  maxBtn.addEventListener('click', () => {
+    document.body.classList.remove('intro-complete');
+  }, { once: true });
 }

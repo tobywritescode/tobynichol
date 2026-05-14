@@ -568,6 +568,41 @@ body.floating-mode #terminal.maximized {
   max-height: 85vh;
 }
 
+/* INTRO SEQUENCE */
+body.intro-active .sub-module {
+  opacity: 0;
+  visibility: hidden;
+}
+
+body.intro-active .sub-module.intro-revealed {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.7s ease;
+  animation: introReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes introReveal {
+  from { transform: translateY(24px); }
+  to { transform: translateY(0); }
+}
+
+@keyframes maximizePulse {
+  0%, 100% {
+    color: var(--accent-faint);
+    box-shadow: 0 0 0 0 rgba(250, 250, 249, 0);
+    border-color: transparent;
+  }
+  50% {
+    color: var(--accent-color);
+    box-shadow: 0 0 12px 0 rgba(250, 250, 249, 0.35);
+    border-color: var(--glass-border);
+  }
+}
+
+body.intro-complete #terminal:not(.maximized) .maximize-btn {
+  animation: maximizePulse 2.4s ease-in-out infinite;
+}
+
 /* MOBILE FALLBACK */
 @media (max-width: 768px) {
   body {
