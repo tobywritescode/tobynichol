@@ -508,6 +508,66 @@ header h1 {
   border: 0;
 }
 
+/* FLOATING MODE (desktop) */
+body.floating-mode {
+  padding-top: 0;
+  display: block;
+  align-items: stretch;
+}
+
+body.floating-mode .hud-wrapper.single-module-layout {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  display: block;
+}
+
+body.floating-mode .terminal-stack {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  gap: 0;
+}
+
+body.floating-mode .sub-terminals {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body.floating-mode .hud-module {
+  position: absolute;
+  margin: 0;
+  transition: box-shadow 0.3s ease, max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), padding 0.6s ease;
+}
+
+body.floating-mode #terminal-header,
+body.floating-mode .sub-module .terminal-header {
+  cursor: move;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+body.floating-mode .hud-module.dragging {
+  transition: none !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 0 1px var(--accent-color);
+}
+
+body.floating-mode #terminal.maximized {
+  left: 50% !important;
+  top: 5vh !important;
+  transform: translateX(-50%);
+  width: min(800px, 90vw);
+  max-width: 800px;
+  max-height: 85vh;
+}
+
 /* MOBILE FALLBACK */
 @media (max-width: 768px) {
   body {

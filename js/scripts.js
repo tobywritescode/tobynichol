@@ -530,13 +530,142 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  const isTouchOrSmall = window.innerWidth < 768 || navigator.maxTouchPoints > 0;
+
   // Mobile: tap to expand/collapse sub-modules
-  if (window.innerWidth < 768 || navigator.maxTouchPoints > 0) {
+  if (isTouchOrSmall) {
     document.querySelectorAll('.sub-module').forEach(module => {
       module.addEventListener('click', (e) => {
         if (e.target.closest('a')) return;
         module.classList.toggle('expanded');
       });
     });
+  } else {
+    initFloatingMode();
   }
 });
+
+function initFloatingMode() {
+  const wrapper = document.querySelector('.hud-wrapper');
+  if (!wrapper) return;
+  const modules = Array.from(document.querySelectorAll('.hud-module'));
+  if (!modules.length) return;
+
+  let zCounter = 100;
+
+  // Capture each module's natural layout position and width, then switch to floating mode.
+  requestAnimationFrame(() => {
+    const captured = modules.map((mod) => {
+      const rect = mod.getBoundingClientRect();
+      return { left: rect.left, top: rect.top, width: rect.width };
+    });
+
+    document.body.classList.add('floating-mode');
+
+    modules.forEach((mod, i) => {
+      mod.style.left = `${captured[i].left}px`;
+      mod.style.top = `${captured[i].top}px`;
+      mod.style.width = `${captured[i].width}px`;
+      mod.style.zIndex = String(zCounter++);
+    });
+  });
+
+  // Drag handling — header strip only, with movement threshold so clicks/hovers still work.
+  modules.forEach((mod) => {
+    const handle = mod.querySelector('#terminal-header, .terminal-header');
+    if (!handle) return;
+
+    // Sub-modules expand downward on hover; bring them forward so they aren't clipped by neighbours.
+    if (mod.classList.contains('sub-module')) {
+      mod.addEventListener('mouseenter', () => {
+        mod.style.zIndex = String(++zCounter);
+      });
+    }
+
+    let active = false;
+    let moved = false;
+    let startX = 0, startY = 0, origX = 0, origY = 0, pointerId = null;
+
+    handle.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      if (e.target.closest('a, button, input, textarea')) return;
+      if (mod.classList.contains('maximized')) return;
+
+      active = true;
+      moved = false;
+      pointerId = e.pointerId;
+      startX = e.clientX;
+      startY = e.clientY;
+      const rect = mod.getBoundingClientRect();
+      origX = rect.left;
+      origY = rect.top;
+      mod.style.zIndex = String(++zCounter);
+      try { handle.setPointerCapture(pointerId); } catch (_) {}
+    });
+
+    handle.addEventListener('pointermove', (e) => {
+      if (!active) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (!moved && Math.hypot(dx, dy) > 4) {
+        moved = true;
+        mod.classList.add('dragging');
+      }
+      if (!moved) return;
+      const w = mod.offsetWidth;
+      const h = mod.offsetHeight;
+      const nx = Math.max(0, Math.min(window.innerWidth - w, origX + dx));
+      const ny = Math.max(0, Math.min(window.innerHeight - h, origY + dy));
+      mod.style.left = `${nx}px`;
+      mod.style.top = `${ny}px`;
+    });
+
+    const endDrag = (e) => {
+      if (!active) return;
+      active = false;
+      mod.classList.remove('dragging');
+      try { handle.releasePointerCapture(pointerId); } catch (_) {}
+      pointerId = null;
+    };
+    handle.addEventListener('pointerup', endDrag);
+    handle.addEventListener('pointercancel', endDrag);
+  });
+
+  // Maximize snap-to-center: save floating position, clear it while maximized, restore on minimize.
+  const mainTerminal = document.getElementById('terminal');
+  const maxBtn = mainTerminal?.querySelector('.maximize-btn');
+  if (mainTerminal && maxBtn) {
+    let saved = null;
+    maxBtn.addEventListener('click', () => {
+      // Runs after the toggle handler above (registration order), so state is current.
+      if (mainTerminal.classList.contains('maximized')) {
+        saved = {
+          left: mainTerminal.style.left,
+          top: mainTerminal.style.top,
+          width: mainTerminal.style.width,
+        };
+        mainTerminal.style.left = '';
+        mainTerminal.style.top = '';
+        mainTerminal.style.width = '';
+        mainTerminal.style.zIndex = String(++zCounter);
+      } else if (saved) {
+        mainTerminal.style.left = saved.left;
+        mainTerminal.style.top = saved.top;
+        mainTerminal.style.width = saved.width;
+      }
+    });
+  }
+
+  // Clamp modules back into view on resize.
+  window.addEventListener('resize', () => {
+    modules.forEach((mod) => {
+      if (mod.classList.contains('maximized')) return;
+      const w = mod.offsetWidth;
+      const h = mod.offsetHeight;
+      const left = parseFloat(mod.style.left) || 0;
+      const top = parseFloat(mod.style.top) || 0;
+      mod.style.left = `${Math.max(0, Math.min(window.innerWidth - w, left))}px`;
+      mod.style.top = `${Math.max(0, Math.min(window.innerHeight - h, top))}px`;
+    });
+  });
+}
