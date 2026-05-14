@@ -28,5 +28,23 @@
     "title": "Digital Autonomy. The Ethereum Grid.",
     "category": "BLOCKCHAIN",
     "path": "articles/05-financial-sovereignty-ethereum.html"
+  },
+  {
+    "id": "06",
+    "title": "Operational Blindness",
+    "category": "OBSERVABILITY",
+    "path": "articles/06-operational-blindness.html"
+  },
+  {
+    "id": "07",
+    "title": "The Java Doctrine",
+    "category": "ARCHITECTURE",
+    "path": "articles/07-java-doctrine.html"
+  },
+  {
+    "id": "08",
+    "title": "Sovereignty Stack",
+    "category": "AUTONOMY",
+    "path": "articles/08-sovereignty-stack.html"
   }
 ]

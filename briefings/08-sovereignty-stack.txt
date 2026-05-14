@@ -1,0 +1,27 @@
+TITLE: Sovereignty Stack
+SUBTITLE: Local-First as a Defense Posture
+ID: 08
+CATEGORY: AUTONOMY
+DATE: 2026-05-14
+DESCRIPTION: The operational case for owning your data, your tooling, and your runtime. SaaS convenience as a permission slip.
+---
+<p class="impact-text">Every cloud service is a permission slip. Convenience is the rate the operator pays to delegate sovereignty over their data, their workflow, and their continued access to the tools they depend on. The Sovereignty Stack is the disciplined refusal of that arrangement — local-first, self-hosted, and engineered for independence.</p>
+
+<p>The modern individual operates almost exclusively inside infrastructure owned by other people. Notes live in someone else's database. Code lives behind someone else's authentication. Models run on someone else's silicon. None of this is inherently wrong. All of it is a dependency, and dependencies have terms — terms that can be revised, revoked, or repriced without consultation.</p>
+
+<h3>Convenience Is Not Free</h3>
+<p>The economic model of consumer software is to lower the entry cost and raise the exit cost. A workflow built inside a proprietary surface is a workflow held there. The user who has stored a decade of writing in a vendor-controlled format has not chosen a tool; they have agreed to a contract whose terms they did not read. The vendor's strategic direction is now their strategic direction, and that direction will not be set by them.</p>
+
+<h3>Local-First as Architecture</h3>
+<p>Local-first software inverts the default. Data lives on the operator's machine first; synchronization is a behavior, not a requirement. The system functions on a plane, in a tunnel, under a partition. The cloud becomes optional — a peer in the network rather than the network itself. This is not a nostalgic posture. It is a design constraint with measurable consequences: lower latency, real privacy, and an exit door that does not depend on the vendor's mood.</p>
+
+<h3>Self-Hosting Is a Discipline</h3>
+<p>Running your own services is harder than renting them. It also produces engineers who understand what they are operating. A self-hosted git server, mail server, or note system is not a hobbyist affectation — it is a working knowledge of the infrastructure layer that most developers have outsourced to the point of illiteracy. The operator who can stand up their own stack is an operator who cannot be locked out of their own work.</p>
+
+<h3>Models on Your Silicon</h3>
+<p>The most consequential expansion of the sovereignty boundary is happening at the model layer. Capable open-weight models now run on consumer hardware. The operator who routes their inference through a local model is not making a quality compromise — they are eliminating an exfiltration vector. The conversation, the document, the contract draft never leaves the device. The same calculus that applied to data residence in 2010 applies to prompt residence now.</p>
+
+<h3>The Real Cost of Dependency</h3>
+<p>The cost of every SaaS subscription is not the monthly fee. It is the conditional access — the assumption that the service will continue to exist, on the current terms, with the current features, against the current threat model. That assumption fails routinely. The operator who has built a parallel local capability does not panic when it does. The operator who has not, does.</p>
+
+<p class="closing-statement">Own the data. Run the runtime. Architect for an exit you may never need to take.</p>
