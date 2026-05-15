@@ -292,9 +292,42 @@ export class FaultyTerminal {
       });
     }
 
+    // Pause the render loop whenever the page isn't being actively looked at.
+    // Three independent reasons: tab hidden, window unfocused, or user idle.
+    this.pauseReasons = { hidden: false, blurred: false, idle: false };
+    const updatePaused = () => {
+      this.paused = this.pauseReasons.hidden || this.pauseReasons.blurred || this.pauseReasons.idle;
+    };
+
     document.addEventListener('visibilitychange', () => {
-      this.paused = document.hidden;
+      this.pauseReasons.hidden = document.hidden;
+      updatePaused();
     });
+
+    window.addEventListener('blur', () => {
+      this.pauseReasons.blurred = true;
+      updatePaused();
+    });
+    window.addEventListener('focus', () => {
+      this.pauseReasons.blurred = false;
+      updatePaused();
+    });
+
+    // Idle pause: 60s of no interaction parks the GPU until the user touches the page again.
+    let idleTimer;
+    const armIdleTimer = () => {
+      this.pauseReasons.idle = false;
+      updatePaused();
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(() => {
+        this.pauseReasons.idle = true;
+        updatePaused();
+      }, 60_000);
+    };
+    ['mousemove', 'keydown', 'touchstart', 'scroll', 'pointerdown'].forEach((ev) => {
+      window.addEventListener(ev, armIdleTimer, { passive: true });
+    });
+    armIdleTimer();
 
     requestAnimationFrame((t) => this.update(t));
   }
@@ -494,7 +527,8 @@ export class TerminalCLI {
 
     async showContact() {
         this.addLine("ESTABLISHING_ENCRYPTED_COMMS_CHANNEL...", 'terminal-info');
-        await this.typeLine("COMMS_OPEN_AT: hello@tobynichol.computer", '', 10);
+        this.addLine(`  <a href='https://github.com/tobywritescode' target='_blank'>${ICONS.github} github.exe</a>`);
+        this.addLine(`  <a href='https://linkedin.com/in/tobynichol' target='_blank'>${ICONS.linkedin} linkedin.sys</a>`);
     }
 
     clear() {
