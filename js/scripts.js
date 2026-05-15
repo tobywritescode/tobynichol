@@ -496,6 +496,7 @@ export class TerminalCLI {
         this.addLine(`  [LIVE]  <a href='https://stratplay.app' target='_blank'>${ICONS.external} StratPlay.app</a> - Strategy & Analytics`);
         this.addLine(`  [LIVE]  <a href='https://tobynichol.computer/telemetry' target='_blank'>${ICONS.external} ETH_Telemetry_Grid</a> - Blockchain Intelligence`);
         this.addLine(`  [LIVE]  <a href='/forensics' target='_blank'>${ICONS.external} Page_Weight_Forensics</a> - Tactical Payload Audit`);
+        this.addLine(`  [LIVE]  <a href='/notes' target='_blank'>${ICONS.external} Sovereign_Notes</a> - AES-256 Encrypted Local Storage`);
         this.addLine(`  [DOCS]  <a href='README.md' target='_blank'>${ICONS.code} Technical_Specs.md</a> - System Architecture`);
     }
 
