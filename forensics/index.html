@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Weight Forensics // Toby Nichol</title>
+    <meta name="description" content="Tactical payload audit. Drop in any URL, get a full breakdown: resource count, third-party origins, framework signatures, render-blocking threats.">
+    <meta name="keywords" content="page weight, web performance, third-party trackers, framework detection, frontend audit">
+
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+
+    <style>
+        /* ── Forensics-specific overrides ─────────────────────────────────── */
+
+        .forensics-header {
+            margin-bottom: 2.4rem;
+        }
+
+        .forensics-form {
+            display: flex;
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .forensics-input {
+            flex: 1 1 300px;
+            min-width: 0;
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-color);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            padding: 0.55rem 0.9rem;
+            outline: none;
+            caret-color: var(--accent-color);
+            transition: border-color 0.15s;
+        }
+
+        .forensics-input::placeholder {
+            color: var(--text-dim);
+        }
+
+        .forensics-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .forensics-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-faint);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.55rem 1.2rem;
+            cursor: pointer;
+            letter-spacing: 0.06em;
+            transition: color 0.15s, border-color 0.15s;
+            white-space: nowrap;
+        }
+
+        .forensics-btn:hover:not(:disabled) {
+            color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .forensics-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* ── Status line ───────────────────────────────────────────────────── */
+
+        #scan-status {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            min-height: 1.4em;
+            margin-bottom: 1.8rem;
+            letter-spacing: 0.04em;
+        }
+
+        #scan-status.active {
+            color: var(--accent-faint);
+        }
+
+        #scan-status.error {
+            color: #c0392b;
+        }
+
+        /* ── Report card ───────────────────────────────────────────────────── */
+
+        #audit-results {
+            display: none;
+        }
+
+        #audit-results.visible {
+            display: block;
+        }
+
+        .audit-divider {
+            border: none;
+            border-top: 1px solid var(--glass-border);
+            margin: 1.4rem 0;
+        }
+
+        .audit-section-title {
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            color: var(--text-dim);
+            margin-bottom: 0.8rem;
+        }
+
+        .audit-block {
+            margin-bottom: 0.4rem;
+        }
+
+        .audit-mono {
+            font-size: 0.78rem;
+            color: var(--accent-faint);
+            line-height: 1.7;
+        }
+
+        .audit-row {
+            display: flex;
+            gap: 1rem;
+            align-items: baseline;
+            font-size: 0.78rem;
+            line-height: 1.8;
+        }
+
+        .audit-label {
+            color: var(--text-dim);
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            min-width: 6rem;
+        }
+
+        .audit-value {
+            color: var(--accent-color);
+        }
+
+        .status-ok { color: #5ba45b; }
+        .status-warn { color: #c0a03b; }
+
+        .audit-row-tree {
+            padding-left: 0.5rem;
+        }
+
+        /* ── Framework rows ────────────────────────────────────────────────── */
+
+        .audit-fw-row {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.78rem;
+            line-height: 1.9;
+        }
+
+        .audit-fw-name {
+            color: var(--accent-color);
+            min-width: 10rem;
+        }
+
+        .audit-tag {
+            font-size: 0.62rem;
+            letter-spacing: 0.1em;
+            padding: 0.1em 0.5em;
+            border: 1px solid;
+            opacity: 0.75;
+        }
+
+        .tag-framework { border-color: #4a8bc4; color: #4a8bc4; }
+        .tag-library   { border-color: #5ba45b; color: #5ba45b; }
+        .tag-tracker   { border-color: #c0392b; color: #c0392b; }
+        .tag-infra     { border-color: #c0a03b; color: #c0a03b; }
+        .tag-cms       { border-color: #8b6bc4; color: #8b6bc4; }
+        .tag-platform  { border-color: #c47a4a; color: #c47a4a; }
+
+        .audit-confidence {
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+        }
+
+        .confidence-confirmed { color: var(--accent-faint); }
+        .confidence-detected  { color: var(--text-dim); }
+
+        .rb-type {
+            color: #c0a03b;
+            font-size: 0.68rem;
+        }
+
+        /* ── Verdict ───────────────────────────────────────────────────────── */
+
+        .verdict-block {
+            padding: 1rem 1.2rem;
+            border: 1px solid var(--glass-border);
+        }
+
+        .verdict-line {
+            font-size: 0.82rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.6rem;
+            color: var(--accent-color);
+        }
+
+        .verdict-factor {
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            line-height: 1.7;
+        }
+
+        .verdict-clean       { border-color: #5ba45b; }
+        .verdict-clean .verdict-line { color: #5ba45b; }
+
+        .verdict-acceptable  { border-color: var(--glass-border); }
+
+        .verdict-heavy       { border-color: #c0a03b; }
+        .verdict-heavy .verdict-line { color: #c0a03b; }
+
+        .verdict-compromised { border-color: #c0392b; }
+        .verdict-compromised .verdict-line { color: #c0392b; }
+
+        .verdict-critical    { border-color: #c0392b; background: rgba(192,57,43,0.06); }
+        .verdict-critical .verdict-line { color: #c0392b; }
+
+        /* ── Scanning animation ────────────────────────────────────────────── */
+
+        @keyframes scanPulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.3; }
+        }
+
+        #scan-status.active::after {
+            content: '_';
+            animation: scanPulse 0.8s step-end infinite;
+        }
+
+        /* ── Mobile ────────────────────────────────────────────────────────── */
+
+        @media (max-width: 600px) {
+            .forensics-form { flex-direction: column; }
+            .forensics-btn  { width: 100%; }
+        }
+    </style>
+</head>
+<body class="briefing-mode">
+    <main class="hud-wrapper single-module-layout">
+        <article class="hud-module briefing-container">
+            <span class="module-meta">MODULE: FORENSICS_ENGINE // v1.0</span>
+
+            <header id="terminal-header" class="forensics-header">
+                <a href="../index.html" class="back-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    RETURN_TO_ROOT
+                </a>
+                <h1>Page Weight Forensics</h1>
+                <p class="subtitle">Tactical Payload Audit // Deep Scan Engine</p>
+            </header>
+
+            <div class="briefing-content">
+                <p class="impact-text">The modern web hides its weight. Bloated dependencies, surveillance trackers, and render-blocking chains operate below the visible surface. This tool strips the facade — enter any URL and receive a full threat assessment.</p>
+
+                <form class="forensics-form" id="forensics-form" autocomplete="off">
+                    <input
+                        type="text"
+                        id="url-input"
+                        class="forensics-input"
+                        placeholder="https://target-url.com"
+                        spellcheck="false"
+                        autocomplete="off"
+                        required
+                    />
+                    <button type="submit" id="scan-btn" class="forensics-btn">EXECUTE AUDIT</button>
+                </form>
+
+                <div id="scan-status"></div>
+
+                <div id="audit-results"></div>
+            </div>
+        </article>
+    </main>
+
+    <div id="terminal-bg" aria-hidden="true"></div>
+
+    <script type="module" src="../js/scripts.js"></script>
+    <script type="module">
+        import { runAudit } from './js/forensics.js';
+
+        const form    = document.getElementById('forensics-form');
+        const input   = document.getElementById('url-input');
+        const btn     = document.getElementById('scan-btn');
+        const status  = document.getElementById('scan-status');
+        const results = document.getElementById('audit-results');
+
+        function setStatus(msg, cls = 'active') {
+            status.textContent = '> ' + msg;
+            status.className = cls;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = input.value.trim();
+            if (!url) return;
+
+            btn.disabled = true;
+            results.classList.remove('visible');
+            results.innerHTML = '';
+
+            try {
+                const data = await runAudit(url, (msg) => setStatus(msg, 'active'));
+                setStatus('AUDIT COMPLETE.', '');
+                renderToDOM(results, data);
+                results.classList.add('visible');
+            } catch (err) {
+                setStatus('ERROR: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        function esc(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function fmtBytes(b) {
+            if (b === 0) return '0 B';
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1048576).toFixed(2) + ' MB';
+        }
+
+        function pad(label, value, w = 44) {
+            const s = String(value);
+            const dots = Math.max(2, w - label.length - s.length);
+            return label + ' ' + '.'.repeat(dots) + ' ' + s;
+        }
+
+        const TAG_CLS = { FRAMEWORK: 'tag-framework', LIBRARY: 'tag-library', TRACKER: 'tag-tracker', INFRA: 'tag-infra', CMS: 'tag-cms', PLATFORM: 'tag-platform' };
+
+        function trunc(s, n = 52) {
+            return s && s.length > n ? s.slice(0, n) + '…' : (s || '');
+        }
+
+        function renderToDOM(container, d) {
+            container.innerHTML = `
+<div class="audit-divider"></div>
+
+<div class="audit-block">
+  <div class="audit-section-title">// THREAT ASSESSMENT REPORT</div>
+  <div class="audit-row"><span class="audit-label">TARGET</span><span class="audit-value">${esc(new URL(d.url).hostname)}</span></div>
+  <div class="audit-row"><span class="audit-label">STATUS</span><span class="audit-value status-${d.httpStatus.startsWith('2') ? 'ok' : 'warn'}">${esc(d.httpStatus)}</span></div>
+</div>
+
+<div class="audit-divider"></div>
+
+<div class="audit-block">
+  <div class="audit-section-title">// PAYLOAD MATRIX</div>
+  <div class="audit-mono">
+    <div>${esc(pad('HTML Document', fmtBytes(d.htmlSize)))}</div>
+    <div>${esc(pad('JS + CSS Estimated', d.estimatedJsCss > 0 ? fmtBytes(d.estimatedJsCss) + (d.sizesKnown < d.resourceCount ? ' (partial)' : '') : 'n/a'))}</div>
+    <div>${esc(pad('Total Resources', d.resourceCount + ' refs'))}</div>
+    <div>${esc(pad('First-party', d.firstPartyCount))}</div>
+    <div>${esc(pad('Third-party', d.thirdPartyCount))}</div>
+    <div>${esc(pad('Inline Scripts', d.inlineScripts))}</div>
+  </div>
+</div>
+
+<div class="audit-divider"></div>
+
+<div class="audit-block">
+  <div class="audit-section-title">// THIRD-PARTY INTEL${d.thirdPartyHostnames.length === 0 ? ' — NONE DETECTED' : ''}</div>
+  ${d.thirdPartyHostnames.map(h => `<div class="audit-mono audit-row-tree">├── ${esc(h)}</div>`).join('')}
+</div>
+
+<div class="audit-divider"></div>
+
+<div class="audit-block">
+  <div class="audit-section-title">// FRAMEWORK SIGNATURES${d.frameworks.length === 0 ? ' — CLEAN' : ''}</div>
+  ${d.frameworks.map(f => `
+  <div class="audit-fw-row">
+    <span class="audit-fw-name">${esc(f.name)}</span>
+    <span class="audit-tag ${TAG_CLS[f.tag] || ''}">${esc(f.tag)}</span>
+    <span class="audit-confidence confidence-${f.confidence.toLowerCase()}">${esc(f.confidence)}</span>
+  </div>`).join('')}
+</div>
+
+<div class="audit-divider"></div>
+
+<div class="audit-block">
+  <div class="audit-section-title">// RENDER-BLOCKING ASSETS${d.renderBlocking.length === 0 ? ' — NONE' : ` — ${d.renderBlocking.length} DETECTED`}</div>
+  ${d.renderBlocking.slice(0, 10).map(r => `<div class="audit-mono audit-row-tree">├── <span class="rb-type">${r.type.toUpperCase()}</span> ${esc(trunc(r.url))}</div>`).join('')}
+  ${d.renderBlocking.length > 10 ? `<div class="audit-mono audit-row-tree">└── …and ${d.renderBlocking.length - 10} more</div>` : ''}
+</div>
+
+<div class="audit-divider"></div>
+
+<div class="audit-block verdict-block verdict-${d.verdict.toLowerCase()}">
+  <div class="verdict-line">VERDICT: <strong>${esc(d.verdict)}</strong> // OPERATIONAL RISK: <strong>${esc(d.riskLevel)}</strong></div>
+  ${d.factors.length > 0 ? d.factors.map(f => `<div class="verdict-factor">⚑ ${esc(f)}</div>`).join('') : '<div class="verdict-factor">No significant risk factors detected.</div>'}
+</div>`;
+        }
+    </script>
+</body>
+</html>
