@@ -145,6 +145,36 @@ body:has(#terminal.maximized) #terminal-bg {
   line-height: 1.6;
 }
 
+.see-also {
+  margin-top: 2rem;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
+.see-also a {
+  color: var(--accent-faint);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.see-also a:hover {
+  color: var(--accent-color);
+  border-bottom-color: var(--accent-faint);
+}
+
+.related-intel {
+  margin-top: 3rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--glass-border);
+}
+
+.related-intel .module-meta {
+  display: block;
+  margin-bottom: 1rem;
+}
+
 .terminal-stack {
   width: 100%;
   max-width: 800px;
