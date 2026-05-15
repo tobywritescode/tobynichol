@@ -11,11 +11,7 @@
     <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
 
     <style>
-        /* ── Forensics-specific overrides ─────────────────────────────────── */
-
-        .forensics-header {
-            margin-bottom: 2.4rem;
-        }
+        .forensics-header { margin-bottom: 2.4rem; }
 
         .forensics-form {
             display: flex;
@@ -38,13 +34,8 @@
             transition: border-color 0.15s;
         }
 
-        .forensics-input::placeholder {
-            color: var(--text-dim);
-        }
-
-        .forensics-input:focus {
-            border-color: var(--accent-color);
-        }
+        .forensics-input::placeholder { color: var(--text-dim); }
+        .forensics-input:focus { border-color: var(--accent-color); }
 
         .forensics-btn {
             background: transparent;
@@ -59,17 +50,8 @@
             white-space: nowrap;
         }
 
-        .forensics-btn:hover:not(:disabled) {
-            color: var(--accent-color);
-            border-color: var(--accent-color);
-        }
-
-        .forensics-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        /* ── Status line ───────────────────────────────────────────────────── */
+        .forensics-btn:hover:not(:disabled) { color: var(--accent-color); border-color: var(--accent-color); }
+        .forensics-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         #scan-status {
             font-size: 0.75rem;
@@ -79,164 +61,53 @@
             letter-spacing: 0.04em;
         }
 
-        #scan-status.active {
-            color: var(--accent-faint);
-        }
+        #scan-status.active  { color: var(--accent-faint); }
+        #scan-status.error   { color: #c0392b; }
 
-        #scan-status.error {
-            color: #c0392b;
-        }
+        @keyframes scanPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        #scan-status.active::after { content: '_'; animation: scanPulse 0.8s step-end infinite; }
 
-        /* ── Report card ───────────────────────────────────────────────────── */
+        #audit-results { display: none; }
+        #audit-results.visible { display: block; }
 
-        #audit-results {
-            display: none;
-        }
+        .audit-divider { border: none; border-top: 1px solid var(--glass-border); margin: 1.4rem 0; }
+        .audit-section-title { font-size: 0.7rem; letter-spacing: 0.12em; color: var(--text-dim); margin-bottom: 0.8rem; }
+        .audit-block { margin-bottom: 0.4rem; }
+        .audit-mono { font-size: 0.78rem; color: var(--accent-faint); line-height: 1.7; }
 
-        #audit-results.visible {
-            display: block;
-        }
-
-        .audit-divider {
-            border: none;
-            border-top: 1px solid var(--glass-border);
-            margin: 1.4rem 0;
-        }
-
-        .audit-section-title {
-            font-size: 0.7rem;
-            letter-spacing: 0.12em;
-            color: var(--text-dim);
-            margin-bottom: 0.8rem;
-        }
-
-        .audit-block {
-            margin-bottom: 0.4rem;
-        }
-
-        .audit-mono {
-            font-size: 0.78rem;
-            color: var(--accent-faint);
-            line-height: 1.7;
-        }
-
-        .audit-row {
-            display: flex;
-            gap: 1rem;
-            align-items: baseline;
-            font-size: 0.78rem;
-            line-height: 1.8;
-        }
-
-        .audit-label {
-            color: var(--text-dim);
-            font-size: 0.68rem;
-            letter-spacing: 0.08em;
-            min-width: 6rem;
-        }
-
-        .audit-value {
-            color: var(--accent-color);
-        }
-
-        .status-ok { color: #5ba45b; }
+        .audit-row { display: flex; gap: 1rem; align-items: baseline; font-size: 0.78rem; line-height: 1.8; }
+        .audit-label { color: var(--text-dim); font-size: 0.68rem; letter-spacing: 0.08em; min-width: 6rem; }
+        .audit-value { color: var(--accent-color); }
+        .status-ok   { color: #5ba45b; }
         .status-warn { color: #c0a03b; }
+        .audit-row-tree { padding-left: 0.5rem; }
 
-        .audit-row-tree {
-            padding-left: 0.5rem;
-        }
-
-        /* ── Framework rows ────────────────────────────────────────────────── */
-
-        .audit-fw-row {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            font-size: 0.78rem;
-            line-height: 1.9;
-        }
-
-        .audit-fw-name {
-            color: var(--accent-color);
-            min-width: 10rem;
-        }
-
-        .audit-tag {
-            font-size: 0.62rem;
-            letter-spacing: 0.1em;
-            padding: 0.1em 0.5em;
-            border: 1px solid;
-            opacity: 0.75;
-        }
-
+        .audit-fw-row { display: flex; align-items: center; gap: 0.8rem; font-size: 0.78rem; line-height: 1.9; }
+        .audit-fw-name { color: var(--accent-color); min-width: 10rem; }
+        .audit-tag { font-size: 0.62rem; letter-spacing: 0.1em; padding: 0.1em 0.5em; border: 1px solid; opacity: 0.75; }
         .tag-framework { border-color: #4a8bc4; color: #4a8bc4; }
         .tag-library   { border-color: #5ba45b; color: #5ba45b; }
         .tag-tracker   { border-color: #c0392b; color: #c0392b; }
         .tag-infra     { border-color: #c0a03b; color: #c0a03b; }
         .tag-cms       { border-color: #8b6bc4; color: #8b6bc4; }
         .tag-platform  { border-color: #c47a4a; color: #c47a4a; }
-
-        .audit-confidence {
-            font-size: 0.65rem;
-            letter-spacing: 0.08em;
-            color: var(--text-dim);
-        }
-
+        .audit-confidence { font-size: 0.65rem; letter-spacing: 0.08em; color: var(--text-dim); }
         .confidence-confirmed { color: var(--accent-faint); }
         .confidence-detected  { color: var(--text-dim); }
+        .rb-type { color: #c0a03b; font-size: 0.68rem; }
 
-        .rb-type {
-            color: #c0a03b;
-            font-size: 0.68rem;
-        }
-
-        /* ── Verdict ───────────────────────────────────────────────────────── */
-
-        .verdict-block {
-            padding: 1rem 1.2rem;
-            border: 1px solid var(--glass-border);
-        }
-
-        .verdict-line {
-            font-size: 0.82rem;
-            letter-spacing: 0.06em;
-            margin-bottom: 0.6rem;
-            color: var(--accent-color);
-        }
-
-        .verdict-factor {
-            font-size: 0.72rem;
-            color: var(--text-dim);
-            line-height: 1.7;
-        }
-
-        .verdict-clean       { border-color: #5ba45b; }
+        .verdict-block { padding: 1rem 1.2rem; border: 1px solid var(--glass-border); }
+        .verdict-line { font-size: 0.82rem; letter-spacing: 0.06em; margin-bottom: 0.6rem; color: var(--accent-color); }
+        .verdict-factor { font-size: 0.72rem; color: var(--text-dim); line-height: 1.7; }
+        .verdict-clean        { border-color: #5ba45b; }
         .verdict-clean .verdict-line { color: #5ba45b; }
-
-        .verdict-acceptable  { border-color: var(--glass-border); }
-
-        .verdict-heavy       { border-color: #c0a03b; }
+        .verdict-acceptable   { border-color: var(--glass-border); }
+        .verdict-heavy        { border-color: #c0a03b; }
         .verdict-heavy .verdict-line { color: #c0a03b; }
-
-        .verdict-compromised { border-color: #c0392b; }
+        .verdict-compromised  { border-color: #c0392b; }
         .verdict-compromised .verdict-line { color: #c0392b; }
-
-        .verdict-critical    { border-color: #c0392b; background: rgba(192,57,43,0.06); }
+        .verdict-critical     { border-color: #c0392b; background: rgba(192,57,43,0.06); }
         .verdict-critical .verdict-line { color: #c0392b; }
-
-        /* ── Scanning animation ────────────────────────────────────────────── */
-
-        @keyframes scanPulse {
-            0%, 100% { opacity: 1; }
-            50%       { opacity: 0.3; }
-        }
-
-        #scan-status.active::after {
-            content: '_';
-            animation: scanPulse 0.8s step-end infinite;
-        }
-
-        /* ── Mobile ────────────────────────────────────────────────────────── */
 
         @media (max-width: 600px) {
             .forensics-form { flex-direction: column; }
@@ -275,7 +146,6 @@
                 </form>
 
                 <div id="scan-status"></div>
-
                 <div id="audit-results"></div>
             </div>
         </article>
@@ -284,122 +154,371 @@
     <div id="terminal-bg" aria-hidden="true"></div>
 
     <script type="module" src="../js/scripts.js"></script>
-    <script type="module">
-        import { runAudit } from '/forensics/js/forensics.js';
 
-        const form    = document.getElementById('forensics-form');
-        const input   = document.getElementById('url-input');
-        const btn     = document.getElementById('scan-btn');
-        const status  = document.getElementById('scan-status');
-        const results = document.getElementById('audit-results');
+    <script>
+    // ─── Config ──────────────────────────────────────────────────────────────
+    const PROXY = '/api/proxy';
+    const MAX_SIZE_PROBES = 24;
 
-        function setStatus(msg, cls = 'active') {
-            status.textContent = '> ' + msg;
-            status.className = cls;
+    // ─── Fetch helpers ────────────────────────────────────────────────────────
+    async function fetchPage(url) {
+        const res = await fetch(PROXY + '?url=' + encodeURIComponent(url));
+        if (!res.ok) {
+            const err = await res.json().catch(function() { return { error: res.statusText }; });
+            throw new Error(err.error || 'HTTP ' + res.status);
         }
+        const html = await res.text();
+        const finalUrl = res.headers.get('X-Final-URL') || url;
+        const httpStatus = res.headers.get('X-Status') || '200';
+        const htmlSize = parseInt(res.headers.get('X-Body-Size') || '0', 10) || new Blob([html]).size;
+        return { html: html, finalUrl: finalUrl, httpStatus: httpStatus, htmlSize: htmlSize };
+    }
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const url = input.value.trim();
-            if (!url) return;
+    async function headResource(url) {
+        try {
+            const res = await fetch(PROXY + '?url=' + encodeURIComponent(url) + '&mode=head');
+            if (!res.ok) return null;
+            return await res.json();
+        } catch (e) {
+            return null;
+        }
+    }
 
-            btn.disabled = true;
-            results.classList.remove('visible');
-            results.innerHTML = '';
+    // ─── URL helpers ──────────────────────────────────────────────────────────
+    function resolveUrl(href, baseUrl) {
+        if (!href || href.startsWith('data:') || href.startsWith('blob:') || href.startsWith('javascript:')) return null;
+        try { return new URL(href, baseUrl).href; } catch (e) { return null; }
+    }
 
+    function sameApex(a, b) {
+        return a.split('.').slice(-2).join('.') === b.split('.').slice(-2).join('.');
+    }
+
+    function uniqueHostnames(resources) {
+        var seen = {};
+        var result = [];
+        resources.forEach(function(r) {
             try {
-                const data = await runAudit(url, (msg) => setStatus(msg, 'active'));
-                setStatus('AUDIT COMPLETE.', '');
-                renderToDOM(results, data);
-                results.classList.add('visible');
-            } catch (err) {
-                setStatus('ERROR: ' + err.message, 'error');
-            } finally {
-                btn.disabled = false;
-            }
+                var h = new URL(r.url).hostname;
+                if (!seen[h]) { seen[h] = true; result.push(h); }
+            } catch(e) {}
+        });
+        return result;
+    }
+
+    // ─── Parse resources from HTML ────────────────────────────────────────────
+    function parseResources(html, baseUrl) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var baseEl = doc.querySelector('base[href]');
+        var base = baseEl ? (resolveUrl(baseEl.getAttribute('href'), baseUrl) || baseUrl) : baseUrl;
+        var resources = [];
+
+        doc.querySelectorAll('script[src]').forEach(function(el) {
+            var url = resolveUrl(el.getAttribute('src'), base);
+            if (url) resources.push({ type: 'script', url: url, blocking: !el.defer && !el.async && !!el.closest('head') });
+        });
+        doc.querySelectorAll('link[rel="stylesheet"][href]').forEach(function(el) {
+            var url = resolveUrl(el.getAttribute('href'), base);
+            if (url) resources.push({ type: 'stylesheet', url: url, blocking: true });
+        });
+        doc.querySelectorAll('img[src]').forEach(function(el) {
+            var url = resolveUrl(el.getAttribute('src'), base);
+            if (url) resources.push({ type: 'image', url: url, blocking: false });
+        });
+        doc.querySelectorAll('link[rel="preload"][href], link[rel="modulepreload"][href]').forEach(function(el) {
+            var url = resolveUrl(el.getAttribute('href'), base);
+            if (url) resources.push({ type: 'preload', url: url, blocking: false });
         });
 
-        function esc(s) {
-            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        var inlineScripts = doc.querySelectorAll('script:not([src])').length;
+        return { resources: resources, inlineScripts: inlineScripts };
+    }
+
+    // ─── Categorise by origin ─────────────────────────────────────────────────
+    function categorizeOrigins(resources, baseUrl) {
+        var base = new URL(baseUrl);
+        var firstParty = [], thirdParty = [];
+        resources.forEach(function(r) {
+            try {
+                var u = new URL(r.url);
+                if (u.hostname === base.hostname || sameApex(u.hostname, base.hostname)) {
+                    firstParty.push(r);
+                } else {
+                    thirdParty.push(r);
+                }
+            } catch(e) { firstParty.push(r); }
+        });
+        return { firstParty: firstParty, thirdParty: thirdParty };
+    }
+
+    // ─── Framework / tracker signatures ──────────────────────────────────────
+    var SIGNATURES = [
+        { name: 'React',             tag: 'FRAMEWORK', html: [/__REACT_DEVTOOLS/,/_reactRootContainer/,/data-reactroot/,/"__reactFiber/],          url: [/react\.production\.min/,/react\.development/,/\/react@\d/,/\/react-dom@\d/] },
+        { name: 'Next.js',           tag: 'FRAMEWORK', html: [/__NEXT_DATA__/,/\/_next\/static/,/<div id="__next"/,/next\/dist\//],                url: [/\/_next\//,/next\.js/] },
+        { name: 'Vue.js',            tag: 'FRAMEWORK', html: [/__vue_app__/,/data-v-[a-f0-9]{6,}/,/\bVue\.version\b/],                            url: [/vue\.global/,/vue\.esm/,/\/vue@\d/] },
+        { name: 'Nuxt',              tag: 'FRAMEWORK', html: [/__NUXT__/,/\/_nuxt\//,/nuxt\.config/],                                             url: [/\/_nuxt\//] },
+        { name: 'Angular',           tag: 'FRAMEWORK', html: [/ng-version=/,/data-ng-app/,/\bangular\.min\.js/],                                   url: [/angular\.min\.js/,/\/angular@\d/] },
+        { name: 'Svelte',            tag: 'FRAMEWORK', html: [/__svelte/,/svelte-\d+/,/\.svelte\./],                                              url: [/svelte\.js/,/\/svelte@\d/] },
+        { name: 'jQuery',            tag: 'LIBRARY',   html: [/jQuery v\d/,/window\.jQuery/,/\$.fn\.jquery/],                                     url: [/jquery\.min\.js/,/jquery-\d+\.\d+/,/\/jquery@\d/] },
+        { name: 'Bootstrap',         tag: 'LIBRARY',   html: [/bootstrap\.bundle\.min/,/class="navbar navbar-/],                                  url: [/bootstrap\.min\.css/,/bootstrap\.bundle\.min/,/\/bootstrap@\d/] },
+        { name: 'Tailwind CSS',      tag: 'LIBRARY',   html: [/tailwind\.config/],                                                                url: [/tailwindcss/,/tailwind\.min\.css/] },
+        { name: 'Google Analytics',  tag: 'TRACKER',   html: [/gtag\(/,/google-analytics\.com\/analytics\.js/,/ga\('create'/,/'UA-\d{6,}'/],      url: [/google-analytics\.com/,/googletagmanager\.com/] },
+        { name: 'Google Tag Manager',tag: 'TRACKER',   html: [/googletagmanager\.com\/gtm\.js/,/GTM-[A-Z0-9]{6,}/],                              url: [/googletagmanager\.com\/gtm/] },
+        { name: 'Meta Pixel',        tag: 'TRACKER',   html: [/fbevents\.js/,/fbq\(/,/facebook\.net\/en_US\/fbevents/],                           url: [/connect\.facebook\.net/,/fbevents\.js/] },
+        { name: 'Hotjar',            tag: 'TRACKER',   html: [/hotjar\.com/,/hjid:\d/,/window\.hj\s*=/],                                         url: [/hotjar\.com/,/hotjar\.io/] },
+        { name: 'Segment',           tag: 'TRACKER',   html: [/analytics\.identify\(/,/analytics\.track\(/,/cdn\.segment\.com/],                  url: [/cdn\.segment\.com/,/segment\.io/] },
+        { name: 'Intercom',          tag: 'TRACKER',   html: [/Intercom\(/,/intercomcdn\.com/,/widget\.intercom\.io/],                            url: [/widget\.intercom\.io/,/intercomcdn\.com/] },
+        { name: 'Cloudflare',        tag: 'INFRA',     html: [/cloudflareinsights\.com/,/data-cf-beacon/],                                        url: [/cloudflareinsights\.com/,/challenges\.cloudflare\.com/] },
+        { name: 'Sentry',            tag: 'INFRA',     html: [/Sentry\.init\(/,/sentry\.io/,/\@sentry\/browser/],                                 url: [/sentry\.io/,/sentry\.min\.js/] },
+        { name: 'WordPress',         tag: 'CMS',       html: [/wp-content\//,/wp-includes\//,/wp-json\//,/generator.*WordPress/i],                url: [/\/wp-content\//,/\/wp-includes\//] },
+        { name: 'Shopify',           tag: 'PLATFORM',  html: [/cdn\.shopify\.com/,/Shopify\.shop\s*=/,/myshopify\.com/],                          url: [/cdn\.shopify\.com/,/shopifycloud\.com/] },
+        { name: 'Wix',               tag: 'PLATFORM',  html: [/wixstatic\.com/,/wix\.com\/lpvideo/,/wixapps\.net/],                               url: [/wixstatic\.com/,/wix\.com\/services/] },
+    ];
+
+    function detectFrameworks(html, resources) {
+        var resourceUrls = resources.map(function(r) { return r.url; }).join(' ');
+        var detected = [];
+        SIGNATURES.forEach(function(sig) {
+            var inHtml = sig.html.some(function(p) { return p.test(html); });
+            var inUrls = sig.url.some(function(p) { return p.test(resourceUrls); });
+            if (inHtml || inUrls) {
+                detected.push({ name: sig.name, tag: sig.tag, confidence: (inHtml && inUrls) ? 'CONFIRMED' : 'DETECTED' });
+            }
+        });
+        return detected;
+    }
+
+    // ─── Render-blocking ──────────────────────────────────────────────────────
+    function findRenderBlocking(html) {
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        var blocking = [];
+        doc.querySelectorAll('head script[src]').forEach(function(el) {
+            if (!el.defer && !el.async) blocking.push({ type: 'script', url: el.getAttribute('src') });
+        });
+        doc.querySelectorAll('head link[rel="stylesheet"]').forEach(function(el) {
+            var media = el.getAttribute('media') || '';
+            if (!media || media === 'all' || media === 'screen') {
+                blocking.push({ type: 'stylesheet', url: el.getAttribute('href') });
+            }
+        });
+        return blocking;
+    }
+
+    // ─── Size estimation ──────────────────────────────────────────────────────
+    async function estimateSizes(resources) {
+        var targets = resources.filter(function(r) { return r.type === 'script' || r.type === 'stylesheet'; }).slice(0, MAX_SIZE_PROBES);
+        var results = await Promise.all(targets.map(function(r) { return headResource(r.url); }));
+        var total = 0, known = 0;
+        results.forEach(function(r) {
+            if (r && r.contentLength) { total += r.contentLength; known++; }
+        });
+        return { total: total, known: known, probed: targets.length };
+    }
+
+    // ─── Scoring ──────────────────────────────────────────────────────────────
+    function score(results) {
+        var risk = 0;
+        var factors = [];
+        var totalKb = (results.htmlSize + results.estimatedJsCss) / 1024;
+        if (totalKb > 2000)      { risk += 3; factors.push('PAYLOAD > 2 MB'); }
+        else if (totalKb > 800)  { risk += 2; factors.push('PAYLOAD > 800 KB'); }
+        else if (totalKb > 300)  { risk += 1; factors.push('PAYLOAD > 300 KB'); }
+
+        var tp = results.thirdPartyHostnames.length;
+        if (tp >= 8)      { risk += 3; factors.push(tp + ' THIRD-PARTY ORIGINS'); }
+        else if (tp >= 4) { risk += 2; factors.push(tp + ' THIRD-PARTY ORIGINS'); }
+        else if (tp >= 2) { risk += 1; factors.push(tp + ' THIRD-PARTY ORIGINS'); }
+
+        var trackers = results.frameworks.filter(function(f) { return f.tag === 'TRACKER'; }).length;
+        if (trackers >= 3)      { risk += 2; factors.push(trackers + ' ACTIVE TRACKERS'); }
+        else if (trackers >= 1) { risk += 1; factors.push(trackers + ' ACTIVE TRACKER(S)'); }
+
+        var rb = results.renderBlocking.length;
+        if (rb >= 6)      { risk += 2; factors.push(rb + ' RENDER-BLOCKING ASSETS'); }
+        else if (rb >= 3) { risk += 1; factors.push(rb + ' RENDER-BLOCKING ASSETS'); }
+
+        var verdict, riskLevel;
+        if      (risk === 0) { verdict = 'CLEAN';       riskLevel = 'MINIMAL'; }
+        else if (risk <= 2)  { verdict = 'ACCEPTABLE';  riskLevel = 'LOW'; }
+        else if (risk <= 4)  { verdict = 'HEAVY';       riskLevel = 'ELEVATED'; }
+        else if (risk <= 6)  { verdict = 'COMPROMISED'; riskLevel = 'HIGH'; }
+        else                 { verdict = 'CRITICAL';    riskLevel = 'CRITICAL'; }
+
+        return { verdict: verdict, riskLevel: riskLevel, factors: factors };
+    }
+
+    // ─── Main orchestrator ────────────────────────────────────────────────────
+    async function runAudit(rawUrl, onStatus) {
+        var url = rawUrl.trim();
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        new URL(url); // throws if invalid
+
+        onStatus('FETCHING TARGET…');
+        var page = await fetchPage(url);
+
+        onStatus('PARSING RESOURCE MAP…');
+        var parsed = parseResources(page.html, page.finalUrl);
+
+        onStatus('IDENTIFYING THREAT SIGNATURES…');
+        var frameworks = detectFrameworks(page.html, parsed.resources);
+
+        onStatus('CLASSIFYING ORIGINS…');
+        var origins = categorizeOrigins(parsed.resources, page.finalUrl);
+        var thirdPartyHostnames = uniqueHostnames(origins.thirdParty);
+
+        onStatus('LOCATING RENDER-BLOCKING ASSETS…');
+        var renderBlocking = findRenderBlocking(page.html);
+
+        var probeCount = Math.min(parsed.resources.filter(function(r) { return r.type === 'script' || r.type === 'stylesheet'; }).length, MAX_SIZE_PROBES);
+        onStatus('PROBING ' + probeCount + ' RESOURCE ENDPOINTS…');
+        var sizes = await estimateSizes(parsed.resources);
+
+        onStatus('COMPILING THREAT ASSESSMENT…');
+
+        var results = {
+            url: page.finalUrl,
+            httpStatus: page.httpStatus,
+            htmlSize: page.htmlSize,
+            estimatedJsCss: sizes.total,
+            sizesKnown: sizes.known,
+            resourceCount: parsed.resources.length,
+            firstPartyCount: origins.firstParty.length,
+            thirdPartyCount: origins.thirdParty.length,
+            thirdPartyHostnames: thirdPartyHostnames,
+            frameworks: frameworks,
+            renderBlocking: renderBlocking,
+            inlineScripts: parsed.inlineScripts,
+        };
+
+        var scoreResult = score(results);
+        results.verdict = scoreResult.verdict;
+        results.riskLevel = scoreResult.riskLevel;
+        results.factors = scoreResult.factors;
+        return results;
+    }
+
+    // ─── Render helpers ───────────────────────────────────────────────────────
+    function esc(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function fmtBytes(b) {
+        if (b === 0) return '0 B';
+        if (b < 1024) return b + ' B';
+        if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+        return (b / 1048576).toFixed(2) + ' MB';
+    }
+    function pad(label, value, w) {
+        w = w || 44;
+        var s = String(value);
+        var dots = Math.max(2, w - label.length - s.length);
+        return label + ' ' + '.'.repeat(dots) + ' ' + s;
+    }
+    function trunc(s, n) {
+        n = n || 52;
+        return s && s.length > n ? s.slice(0, n) + '…' : (s || '');
+    }
+
+    var TAG_CLS = { FRAMEWORK: 'tag-framework', LIBRARY: 'tag-library', TRACKER: 'tag-tracker', INFRA: 'tag-infra', CMS: 'tag-cms', PLATFORM: 'tag-platform' };
+
+    function renderToDOM(container, d) {
+        var estLabel = d.estimatedJsCss > 0
+            ? fmtBytes(d.estimatedJsCss) + (d.sizesKnown < d.resourceCount ? ' (partial)' : '')
+            : 'n/a';
+
+        var thirdPartyRows = d.thirdPartyHostnames.map(function(h) {
+            return '<div class="audit-mono audit-row-tree">├── ' + esc(h) + '</div>';
+        }).join('');
+
+        var fwRows = d.frameworks.map(function(f) {
+            return '<div class="audit-fw-row"><span class="audit-fw-name">' + esc(f.name) + '</span>'
+                + '<span class="audit-tag ' + (TAG_CLS[f.tag] || '') + '">' + esc(f.tag) + '</span>'
+                + '<span class="audit-confidence confidence-' + f.confidence.toLowerCase() + '">' + esc(f.confidence) + '</span></div>';
+        }).join('');
+
+        var rbRows = d.renderBlocking.slice(0, 10).map(function(r) {
+            return '<div class="audit-mono audit-row-tree">├── <span class="rb-type">' + r.type.toUpperCase() + '</span> ' + esc(trunc(r.url)) + '</div>';
+        }).join('');
+        if (d.renderBlocking.length > 10) {
+            rbRows += '<div class="audit-mono audit-row-tree">└── …and ' + (d.renderBlocking.length - 10) + ' more</div>';
         }
 
-        function fmtBytes(b) {
-            if (b === 0) return '0 B';
-            if (b < 1024) return b + ' B';
-            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
-            return (b / 1048576).toFixed(2) + ' MB';
+        var factorRows = d.factors.length > 0
+            ? d.factors.map(function(f) { return '<div class="verdict-factor">⚑ ' + esc(f) + '</div>'; }).join('')
+            : '<div class="verdict-factor">No significant risk factors detected.</div>';
+
+        container.innerHTML = ''
+            + '<div class="audit-divider"></div>'
+            + '<div class="audit-block">'
+            +   '<div class="audit-section-title">// THREAT ASSESSMENT REPORT</div>'
+            +   '<div class="audit-row"><span class="audit-label">TARGET</span><span class="audit-value">' + esc(new URL(d.url).hostname) + '</span></div>'
+            +   '<div class="audit-row"><span class="audit-label">STATUS</span><span class="audit-value status-' + (d.httpStatus[0] === '2' ? 'ok' : 'warn') + '">' + esc(d.httpStatus) + '</span></div>'
+            + '</div>'
+            + '<div class="audit-divider"></div>'
+            + '<div class="audit-block">'
+            +   '<div class="audit-section-title">// PAYLOAD MATRIX</div>'
+            +   '<div class="audit-mono">'
+            +     '<div>' + esc(pad('HTML Document', fmtBytes(d.htmlSize))) + '</div>'
+            +     '<div>' + esc(pad('JS + CSS Estimated', estLabel)) + '</div>'
+            +     '<div>' + esc(pad('Total Resources', d.resourceCount + ' refs')) + '</div>'
+            +     '<div>' + esc(pad('First-party', d.firstPartyCount)) + '</div>'
+            +     '<div>' + esc(pad('Third-party', d.thirdPartyCount)) + '</div>'
+            +     '<div>' + esc(pad('Inline Scripts', d.inlineScripts)) + '</div>'
+            +   '</div>'
+            + '</div>'
+            + '<div class="audit-divider"></div>'
+            + '<div class="audit-block">'
+            +   '<div class="audit-section-title">// THIRD-PARTY INTEL' + (d.thirdPartyHostnames.length === 0 ? ' — NONE DETECTED' : '') + '</div>'
+            +   thirdPartyRows
+            + '</div>'
+            + '<div class="audit-divider"></div>'
+            + '<div class="audit-block">'
+            +   '<div class="audit-section-title">// FRAMEWORK SIGNATURES' + (d.frameworks.length === 0 ? ' — CLEAN' : '') + '</div>'
+            +   fwRows
+            + '</div>'
+            + '<div class="audit-divider"></div>'
+            + '<div class="audit-block">'
+            +   '<div class="audit-section-title">// RENDER-BLOCKING ASSETS' + (d.renderBlocking.length === 0 ? ' — NONE' : ' — ' + d.renderBlocking.length + ' DETECTED') + '</div>'
+            +   rbRows
+            + '</div>'
+            + '<div class="audit-divider"></div>'
+            + '<div class="audit-block verdict-block verdict-' + d.verdict.toLowerCase() + '">'
+            +   '<div class="verdict-line">VERDICT: <strong>' + esc(d.verdict) + '</strong> // OPERATIONAL RISK: <strong>' + esc(d.riskLevel) + '</strong></div>'
+            +   factorRows
+            + '</div>';
+    }
+
+    // ─── Wire up form ─────────────────────────────────────────────────────────
+    var form    = document.getElementById('forensics-form');
+    var input   = document.getElementById('url-input');
+    var btn     = document.getElementById('scan-btn');
+    var statusEl = document.getElementById('scan-status');
+    var resultsEl = document.getElementById('audit-results');
+
+    function setStatus(msg, cls) {
+        statusEl.textContent = '> ' + msg;
+        statusEl.className = cls !== undefined ? cls : 'active';
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var url = input.value.trim();
+        if (!url) return;
+
+        btn.disabled = true;
+        resultsEl.classList.remove('visible');
+        resultsEl.innerHTML = '';
+
+        try {
+            var data = await runAudit(url, function(msg) { setStatus(msg, 'active'); });
+            setStatus('AUDIT COMPLETE.', '');
+            renderToDOM(resultsEl, data);
+            resultsEl.classList.add('visible');
+        } catch (err) {
+            setStatus('ERROR: ' + err.message, 'error');
+        } finally {
+            btn.disabled = false;
         }
-
-        function pad(label, value, w = 44) {
-            const s = String(value);
-            const dots = Math.max(2, w - label.length - s.length);
-            return label + ' ' + '.'.repeat(dots) + ' ' + s;
-        }
-
-        const TAG_CLS = { FRAMEWORK: 'tag-framework', LIBRARY: 'tag-library', TRACKER: 'tag-tracker', INFRA: 'tag-infra', CMS: 'tag-cms', PLATFORM: 'tag-platform' };
-
-        function trunc(s, n = 52) {
-            return s && s.length > n ? s.slice(0, n) + '…' : (s || '');
-        }
-
-        function renderToDOM(container, d) {
-            container.innerHTML = `
-<div class="audit-divider"></div>
-
-<div class="audit-block">
-  <div class="audit-section-title">// THREAT ASSESSMENT REPORT</div>
-  <div class="audit-row"><span class="audit-label">TARGET</span><span class="audit-value">${esc(new URL(d.url).hostname)}</span></div>
-  <div class="audit-row"><span class="audit-label">STATUS</span><span class="audit-value status-${d.httpStatus.startsWith('2') ? 'ok' : 'warn'}">${esc(d.httpStatus)}</span></div>
-</div>
-
-<div class="audit-divider"></div>
-
-<div class="audit-block">
-  <div class="audit-section-title">// PAYLOAD MATRIX</div>
-  <div class="audit-mono">
-    <div>${esc(pad('HTML Document', fmtBytes(d.htmlSize)))}</div>
-    <div>${esc(pad('JS + CSS Estimated', d.estimatedJsCss > 0 ? fmtBytes(d.estimatedJsCss) + (d.sizesKnown < d.resourceCount ? ' (partial)' : '') : 'n/a'))}</div>
-    <div>${esc(pad('Total Resources', d.resourceCount + ' refs'))}</div>
-    <div>${esc(pad('First-party', d.firstPartyCount))}</div>
-    <div>${esc(pad('Third-party', d.thirdPartyCount))}</div>
-    <div>${esc(pad('Inline Scripts', d.inlineScripts))}</div>
-  </div>
-</div>
-
-<div class="audit-divider"></div>
-
-<div class="audit-block">
-  <div class="audit-section-title">// THIRD-PARTY INTEL${d.thirdPartyHostnames.length === 0 ? ' — NONE DETECTED' : ''}</div>
-  ${d.thirdPartyHostnames.map(h => `<div class="audit-mono audit-row-tree">├── ${esc(h)}</div>`).join('')}
-</div>
-
-<div class="audit-divider"></div>
-
-<div class="audit-block">
-  <div class="audit-section-title">// FRAMEWORK SIGNATURES${d.frameworks.length === 0 ? ' — CLEAN' : ''}</div>
-  ${d.frameworks.map(f => `
-  <div class="audit-fw-row">
-    <span class="audit-fw-name">${esc(f.name)}</span>
-    <span class="audit-tag ${TAG_CLS[f.tag] || ''}">${esc(f.tag)}</span>
-    <span class="audit-confidence confidence-${f.confidence.toLowerCase()}">${esc(f.confidence)}</span>
-  </div>`).join('')}
-</div>
-
-<div class="audit-divider"></div>
-
-<div class="audit-block">
-  <div class="audit-section-title">// RENDER-BLOCKING ASSETS${d.renderBlocking.length === 0 ? ' — NONE' : ` — ${d.renderBlocking.length} DETECTED`}</div>
-  ${d.renderBlocking.slice(0, 10).map(r => `<div class="audit-mono audit-row-tree">├── <span class="rb-type">${r.type.toUpperCase()}</span> ${esc(trunc(r.url))}</div>`).join('')}
-  ${d.renderBlocking.length > 10 ? `<div class="audit-mono audit-row-tree">└── …and ${d.renderBlocking.length - 10} more</div>` : ''}
-</div>
-
-<div class="audit-divider"></div>
-
-<div class="audit-block verdict-block verdict-${d.verdict.toLowerCase()}">
-  <div class="verdict-line">VERDICT: <strong>${esc(d.verdict)}</strong> // OPERATIONAL RISK: <strong>${esc(d.riskLevel)}</strong></div>
-  ${d.factors.length > 0 ? d.factors.map(f => `<div class="verdict-factor">⚑ ${esc(f)}</div>`).join('') : '<div class="verdict-factor">No significant risk factors detected.</div>'}
-</div>`;
-        }
+    });
     </script>
 </body>
 </html>
