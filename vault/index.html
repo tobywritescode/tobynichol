@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Vault // Toby Nichol</title>
+    <meta name="description" content="Zero-backend AES-256-GCM password vault. No server, no account, no sync. You own the key.">
+
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+
+    <style>
+        .sv-header { margin-bottom: 2.4rem; }
+
+        /* ── Shared button / input primitives ────────────────────────────────── */
+        .sv-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-faint);
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            padding: 0.38rem 0.8rem;
+            cursor: pointer;
+            letter-spacing: 0.08em;
+            transition: color 0.12s, border-color 0.12s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .sv-btn:hover:not(:disabled) { color: var(--accent-color); border-color: var(--accent-color); }
+        .sv-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .sv-btn.danger:hover:not(:disabled) { color: #c0392b; border-color: #c0392b; }
+        .sv-btn.active  { color: var(--accent-color); border-color: var(--accent-faint); }
+
+        .sv-input {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-color);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            padding: 0.45rem 0.7rem;
+            outline: none;
+            transition: border-color 0.12s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .sv-input::placeholder { color: var(--text-dim); }
+        .sv-input:focus { border-color: var(--accent-faint); }
+
+        /* ── Lock screen ─────────────────────────────────────────────────────── */
+        .vault-status {
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+        }
+
+        .vault-status-val { color: var(--accent-faint); }
+
+        .vault-warning {
+            font-size: 0.72rem;
+            color: var(--text-dim);
+            line-height: 1.7;
+            max-width: 500px;
+            margin-bottom: 2rem;
+        }
+
+        .vault-warning strong { color: var(--accent-faint); }
+
+        .pass-form { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+
+        .pass-input {
+            flex: 1 1 260px;
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-color);
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            padding: 0.55rem 0.9rem;
+            outline: none;
+            letter-spacing: 0.12em;
+            transition: border-color 0.12s;
+        }
+
+        .pass-input:focus { border-color: var(--accent-color); }
+
+        .auth-error {
+            font-size: 0.7rem;
+            color: #c0392b;
+            min-height: 1.2em;
+            letter-spacing: 0.04em;
+        }
+
+        @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.2; } }
+        .deriving { animation: blink 0.7s step-end infinite; }
+
+        /* ── Toolbar ─────────────────────────────────────────────────────────── */
+        .vault-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .toolbar-spacer { flex: 1; }
+
+        .search-input {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-color);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            padding: 0.38rem 0.7rem;
+            outline: none;
+            width: 180px;
+            transition: border-color 0.12s;
+        }
+
+        .search-input::placeholder { color: var(--text-dim); }
+        .search-input:focus { border-color: var(--accent-faint); }
+
+        .entry-count {
+            font-size: 0.66rem;
+            color: var(--text-dim);
+            letter-spacing: 0.06em;
+        }
+
+        .import-label {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-faint);
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            padding: 0.38rem 0.8rem;
+            cursor: pointer;
+            letter-spacing: 0.08em;
+            transition: color 0.12s, border-color 0.12s;
+            white-space: nowrap;
+        }
+
+        .import-label:hover { color: var(--accent-color); border-color: var(--accent-color); }
+        .import-label input { display: none; }
+
+        /* ── Entry list ──────────────────────────────────────────────────────── */
+        .entry-list-header {
+            display: flex;
+            font-size: 0.62rem;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 0.2rem;
+        }
+
+        .entry-col-title { flex: 2; }
+        .entry-col-user  { flex: 2; }
+        .entry-col-date  { flex: 1; text-align: right; }
+
+        .entry-item {
+            display: flex;
+            align-items: baseline;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--glass-border);
+            cursor: pointer;
+            font-size: 0.78rem;
+            color: var(--accent-faint);
+            transition: color 0.1s;
+            gap: 0.5rem;
+        }
+
+        .entry-item:hover { color: var(--accent-color); }
+
+        .entry-item.active {
+            color: var(--accent-color);
+        }
+
+        .entry-item.active .entry-col-title::before { content: '> '; }
+
+        .entry-col-title { flex: 2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .entry-col-user  { flex: 2; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-dim); font-size: 0.7rem; }
+        .entry-col-date  { flex: 1; text-align: right; color: var(--text-dim); font-size: 0.66rem; flex-shrink: 0; }
+
+        .no-entries {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            padding: 1.4rem 0;
+            letter-spacing: 0.04em;
+        }
+
+        /* ── Entry form ──────────────────────────────────────────────────────── */
+        #entry-panel {
+            margin-top: 2rem;
+            padding-top: 1.6rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .form-label {
+            font-size: 0.62rem;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            width: 5.5rem;
+            flex-shrink: 0;
+        }
+
+        .form-row .sv-input { flex: 1; }
+
+        .password-field-wrap {
+            display: flex;
+            gap: 0.4rem;
+            flex: 1;
+            align-items: center;
+        }
+
+        .password-field-wrap .sv-input { flex: 1; min-width: 0; font-family: var(--font-mono); }
+
+        .strength-badge {
+            font-size: 0.6rem;
+            letter-spacing: 0.08em;
+            padding: 0.15em 0.5em;
+            border: 1px solid;
+            flex-shrink: 0;
+        }
+
+        .strength-weak      { color: #c0392b; border-color: #c0392b; }
+        .strength-fair      { color: #c0a03b; border-color: #c0a03b; }
+        .strength-strong    { color: #5ba45b; border-color: #5ba45b; }
+        .strength-excellent { color: #4a8bc4; border-color: #4a8bc4; }
+
+        .copy-btn-wrap {
+            display: flex;
+            gap: 0.4rem;
+            flex-shrink: 0;
+        }
+
+        .copy-countdown {
+            font-size: 0.62rem;
+            color: #5ba45b;
+            letter-spacing: 0.06em;
+            min-width: 2rem;
+            text-align: right;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 80px;
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-faint);
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            padding: 0.6rem 0.7rem;
+            outline: none;
+            resize: vertical;
+            line-height: 1.65;
+            box-sizing: border-box;
+            transition: border-color 0.12s;
+            flex: 1;
+        }
+
+        .notes-textarea::placeholder { color: var(--text-dim); opacity: 0.6; }
+        .notes-textarea:focus { border-color: var(--accent-faint); }
+
+        /* ── Generator ───────────────────────────────────────────────────────── */
+        .gen-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: -0.2rem;
+            margin-bottom: 0.8rem;
+            padding-left: 6rem;
+        }
+
+        .gen-label {
+            font-size: 0.62rem;
+            color: var(--text-dim);
+            letter-spacing: 0.06em;
+        }
+
+        .gen-length {
+            width: 3.5rem;
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-color);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            padding: 0.2rem 0.4rem;
+            outline: none;
+            text-align: center;
+        }
+
+        .gen-check { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; }
+        .gen-check input { accent-color: var(--accent-faint); cursor: pointer; }
+        .gen-check span { font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.04em; }
+
+        /* ── Form footer ─────────────────────────────────────────────────────── */
+        .form-footer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .save-status {
+            font-size: 0.64rem;
+            color: var(--text-dim);
+            letter-spacing: 0.08em;
+            margin-left: auto;
+        }
+
+        .save-status.unsaved { color: #c0a03b; }
+        .save-status.saving  { color: var(--text-dim); }
+        .save-status.saved   { color: #5ba45b; }
+
+        /* ── Auto-lock warning ───────────────────────────────────────────────── */
+        #autolock-banner {
+            display: none;
+            font-size: 0.68rem;
+            color: #c0a03b;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.8rem;
+        }
+
+        /* ── Mobile ──────────────────────────────────────────────────────────── */
+        @media (max-width: 640px) {
+            .entry-col-user  { display: none; }
+            .form-label      { width: 4rem; font-size: 0.58rem; }
+            .gen-row         { padding-left: 4.5rem; }
+            .search-input    { width: 120px; }
+            .entry-list-header .entry-col-user { display: none; }
+        }
+    </style>
+</head>
+<body class="briefing-mode">
+    <main class="hud-wrapper single-module-layout">
+        <article class="hud-module briefing-container">
+            <span class="module-meta">MODULE: SOVEREIGN_VAULT // AES-256-GCM // AUTO-LOCK 5m</span>
+
+            <header id="terminal-header" class="sv-header">
+                <a href="../index.html" class="back-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                    RETURN_TO_ROOT
+                </a>
+                <h1>Sovereign Vault</h1>
+                <p class="subtitle">Local-First Password Manager // No Server. No Account. No Recovery.</p>
+            </header>
+
+            <div class="briefing-content">
+
+                <!-- ── Lock screen ─────────────────────────────────────────── -->
+                <div id="screen-locked">
+                    <div class="vault-status">
+                        VAULT STATUS: <span class="vault-status-val" id="vault-status-text">CHECKING…</span>
+                    </div>
+                    <p class="vault-warning" id="vault-warning"></p>
+                    <form class="pass-form" id="pass-form" autocomplete="off">
+                        <input type="password" id="pass-input" class="pass-input"
+                            placeholder="PASSPHRASE" autocomplete="new-password" spellcheck="false" required/>
+                        <button type="submit" id="unlock-btn" class="sv-btn" style="font-size:0.75rem;padding:0.55rem 1.1rem;">UNLOCK</button>
+                    </form>
+                    <div class="auth-error" id="auth-error"></div>
+                </div>
+
+                <!-- ── Unlocked screen ─────────────────────────────────────── -->
+                <div id="screen-unlocked" hidden>
+                    <div id="autolock-banner">⚑ VAULT LOCKING IN <span id="lock-countdown"></span>s — move mouse or press a key to reset</div>
+
+                    <div class="vault-toolbar">
+                        <button class="sv-btn" id="add-btn">+ ADD</button>
+                        <button class="sv-btn" id="export-btn">EXPORT</button>
+                        <label class="import-label">IMPORT<input type="file" id="import-input" accept=".vault,.json"></label>
+                        <button class="sv-btn danger" id="lock-btn">LOCK</button>
+                        <div class="toolbar-spacer"></div>
+                        <input type="search" id="search-input" class="search-input" placeholder="SEARCH…" autocomplete="off" spellcheck="false"/>
+                        <span class="entry-count" id="entry-count"></span>
+                    </div>
+
+                    <div class="entry-list-header">
+                        <span class="entry-col-title">TITLE</span>
+                        <span class="entry-col-user">USERNAME / URL</span>
+                        <span class="entry-col-date">UPDATED</span>
+                    </div>
+
+                    <div id="entry-list"></div>
+
+                    <!-- ── Entry panel ──────────────────────────────────────── -->
+                    <div id="entry-panel" hidden>
+
+                        <div class="form-row">
+                            <span class="form-label">TITLE</span>
+                            <input type="text" id="f-title" class="sv-input" placeholder="e.g. GitHub" spellcheck="false" autocomplete="off"/>
+                        </div>
+
+                        <div class="form-row">
+                            <span class="form-label">URL</span>
+                            <input type="text" id="f-url" class="sv-input" placeholder="https://" spellcheck="false" autocomplete="off"/>
+                        </div>
+
+                        <div class="form-row">
+                            <span class="form-label">USERNAME</span>
+                            <input type="text" id="f-user" class="sv-input" placeholder="username or email" spellcheck="false" autocomplete="off"/>
+                            <div class="copy-btn-wrap">
+                                <button class="sv-btn" id="copy-user-btn">COPY</button>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <span class="form-label">PASSWORD</span>
+                            <div class="password-field-wrap">
+                                <input type="password" id="f-pass" class="sv-input" placeholder="password" autocomplete="new-password" spellcheck="false"/>
+                                <span class="strength-badge" id="strength-badge" style="display:none"></span>
+                            </div>
+                            <div class="copy-btn-wrap">
+                                <button class="sv-btn" id="toggle-pass-btn">SHOW</button>
+                                <button class="sv-btn" id="copy-pass-btn">COPY</button>
+                                <span class="copy-countdown" id="copy-countdown"></span>
+                            </div>
+                        </div>
+
+                        <!-- Generator controls -->
+                        <div class="gen-row" id="gen-row">
+                            <span class="gen-label">GEN</span>
+                            <input type="number" id="gen-length" class="gen-length" value="20" min="8" max="64" title="Password length"/>
+                            <label class="gen-check"><input type="checkbox" id="gen-upper"   checked/><span>A–Z</span></label>
+                            <label class="gen-check"><input type="checkbox" id="gen-lower"   checked/><span>a–z</span></label>
+                            <label class="gen-check"><input type="checkbox" id="gen-digits"  checked/><span>0–9</span></label>
+                            <label class="gen-check"><input type="checkbox" id="gen-symbols" checked/><span>!@#…</span></label>
+                            <button class="sv-btn" id="gen-btn">GENERATE</button>
+                        </div>
+
+                        <div class="form-row">
+                            <span class="form-label">NOTES</span>
+                            <textarea id="f-notes" class="notes-textarea" placeholder="Optional notes…" spellcheck="false"></textarea>
+                        </div>
+
+                        <div class="form-footer">
+                            <button class="sv-btn danger" id="delete-btn">DELETE</button>
+                            <span class="save-status" id="save-status"></span>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </article>
+    </main>
+
+    <div id="terminal-bg" aria-hidden="true"></div>
+    <script type="module" src="../js/scripts.js"></script>
+
+    <script>
+    'use strict';
+
+    // ── IndexedDB ─────────────────────────────────────────────────────────────
+    var DB_NAME    = 'sovereign-vault-v1';
+    var DB_VERSION = 1;
+    var _db        = null;
+
+    function openDB() {
+        return new Promise(function(resolve, reject) {
+            var req = indexedDB.open(DB_NAME, DB_VERSION);
+            req.onupgradeneeded = function(e) {
+                var d = e.target.result;
+                if (!d.objectStoreNames.contains('entries')) d.createObjectStore('entries', { keyPath: 'id' });
+                if (!d.objectStoreNames.contains('config'))  d.createObjectStore('config');
+            };
+            req.onsuccess = function(e) { resolve(e.target.result); };
+            req.onerror   = function(e) { reject(e.target.error); };
+        });
+    }
+
+    function dbOp(store, mode, fn) {
+        return new Promise(function(resolve, reject) {
+            var req = fn(_db.transaction(store, mode).objectStore(store));
+            req.onsuccess = function() { resolve(req.result); };
+            req.onerror   = function() { reject(req.error); };
+        });
+    }
+
+    function dbGet(s, k)      { return dbOp(s, 'readonly',  function(st) { return st.get(k); }); }
+    function dbGetAll(s)      { return dbOp(s, 'readonly',  function(st) { return st.getAll(); }); }
+    function dbPut(s, v, k)   { return dbOp(s, 'readwrite', function(st) { return k !== undefined ? st.put(v, k) : st.put(v); }); }
+    function dbDel(s, k)      { return dbOp(s, 'readwrite', function(st) { return st.delete(k); }); }
+
+    // ── Crypto ────────────────────────────────────────────────────────────────
+    var ENC          = new TextEncoder();
+    var DEC          = new TextDecoder();
+    var VERIFY_PLAIN = 'SOVEREIGN_VAULT_V1';
+    var PBKDF2_ITER  = 200000;
+
+    function toB64(arr) {
+        var s = '', bytes = Array.isArray(arr) ? arr : Array.from(new Uint8Array(arr));
+        for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+        return btoa(s);
+    }
+
+    function fromB64(s) {
+        var raw = atob(s), arr = [];
+        for (var i = 0; i < raw.length; i++) arr.push(raw.charCodeAt(i));
+        return arr;
+    }
+
+    async function deriveKey(passphrase, salt) {
+        var raw = await crypto.subtle.importKey('raw', ENC.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+        return crypto.subtle.deriveKey(
+            { name: 'PBKDF2', salt: new Uint8Array(salt), iterations: PBKDF2_ITER, hash: 'SHA-256' },
+            raw,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['encrypt', 'decrypt']
+        );
+    }
+
+    async function aesEnc(key, plaintext) {
+        var iv = Array.from(crypto.getRandomValues(new Uint8Array(12)));
+        var ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: new Uint8Array(iv) }, key, ENC.encode(plaintext));
+        return { iv: iv, data: Array.from(new Uint8Array(ct)) };
+    }
+
+    async function aesDec(key, obj) {
+        var pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(obj.iv) }, key, new Uint8Array(obj.data));
+        return DEC.decode(pt);
+    }
+
+    // ── Vault auth ────────────────────────────────────────────────────────────
+    async function vaultExists() {
+        return !!(await dbGet('config', 'salt'));
+    }
+
+    async function createVault(pass) {
+        var salt = Array.from(crypto.getRandomValues(new Uint8Array(16)));
+        await dbPut('config', salt, 'salt');
+        var key  = await deriveKey(pass, salt);
+        await dbPut('config', await aesEnc(key, VERIFY_PLAIN), 'verify');
+        return key;
+    }
+
+    async function openVault(pass) {
+        var salt  = await dbGet('config', 'salt');
+        if (!salt) return null;
+        var key   = await deriveKey(pass, salt);
+        var verif = await dbGet('config', 'verify');
+        if (!verif) return null;
+        try { return (await aesDec(key, verif)) === VERIFY_PLAIN ? key : null; }
+        catch (e) { return null; }
+    }
+
+    // ── Entry CRUD ────────────────────────────────────────────────────────────
+    function newId() {
+        return typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : Date.now().toString(36) + Math.random().toString(36).slice(2);
+    }
+
+    async function loadAllEntries(key) {
+        var raw = await dbGetAll('entries');
+        raw.sort(function(a, b) { return b.updated - a.updated; });
+        return Promise.all(raw.map(async function(e) {
+            try {
+                var fields = JSON.parse(await aesDec(key, e.encData));
+                return { id: e.id, created: e.created, updated: e.updated, title: fields.title || '', url: fields.url || '', username: fields.username || '', password: fields.password || '', notes: fields.notes || '' };
+            } catch (_) {
+                return { id: e.id, created: e.created, updated: e.updated, title: '[CORRUPTED]', url: '', username: '', password: '', notes: '' };
+            }
+        }));
+    }
+
+    async function persistEntry(key, entry) {
+        var now     = Date.now();
+        var payload = JSON.stringify({ title: entry.title, url: entry.url, username: entry.username, password: entry.password, notes: entry.notes });
+        await dbPut('entries', { id: entry.id, encData: await aesEnc(key, payload), created: entry.created || now, updated: now });
+    }
+
+    // ── Password generator ────────────────────────────────────────────────────
+    function generatePassword(length, upper, lower, digits, symbols) {
+        var charset =
+            (upper   ? 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' : '') +
+            (lower   ? 'abcdefghijklmnopqrstuvwxyz' : '') +
+            (digits  ? '0123456789' : '') +
+            (symbols ? '!@#$%^&*()_+-=[]{}|;:,.<>?' : '');
+        if (!charset) charset = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        var buf = new Uint8Array(length * 2);
+        crypto.getRandomValues(buf);
+        var result = '';
+        for (var i = 0; i < buf.length && result.length < length; i++) {
+            var idx = buf[i] % charset.length;
+            // Reject if bias would make one char twice as likely (rejection sampling lite)
+            if (buf[i] < Math.floor(256 / charset.length) * charset.length) {
+                result += charset[idx];
+            }
+        }
+        // Fallback if we ran out of buffer (very rare)
+        while (result.length < length) {
+            var extra = new Uint8Array(1);
+            crypto.getRandomValues(extra);
+            result += charset[extra[0] % charset.length];
+        }
+        return result;
+    }
+
+    function passwordStrength(pwd) {
+        if (!pwd) return null;
+        var score = 0;
+        if (pwd.length >= 10) score++;
+        if (pwd.length >= 14) score++;
+        if (pwd.length >= 18) score++;
+        if (/[A-Z]/.test(pwd)) score++;
+        if (/[a-z]/.test(pwd)) score++;
+        if (/[0-9]/.test(pwd)) score++;
+        if (/[^A-Za-z0-9]/.test(pwd)) score++;
+        if (score <= 2) return { label: 'WEAK',      cls: 'strength-weak' };
+        if (score <= 4) return { label: 'FAIR',      cls: 'strength-fair' };
+        if (score <= 5) return { label: 'STRONG',    cls: 'strength-strong' };
+        return             { label: 'EXCELLENT',  cls: 'strength-excellent' };
+    }
+
+    // ── Export / Import ───────────────────────────────────────────────────────
+    async function exportVault() {
+        var salt    = await dbGet('config', 'salt');
+        var verif   = await dbGet('config', 'verify');
+        var raw     = await dbGetAll('entries');
+        var payload = {
+            version: 1, type: 'password-vault',
+            salt:    toB64(salt),
+            verify:  { iv: toB64(verif.iv), data: toB64(verif.data) },
+            entries: raw.map(function(e) { return { id: e.id, encData: { iv: toB64(e.encData.iv), data: toB64(e.encData.data) }, created: e.created, updated: e.updated }; }),
+        };
+        var blob = new Blob([JSON.stringify(payload)], { type: 'application/octet-stream' });
+        var url  = URL.createObjectURL(blob);
+        var a    = document.createElement('a');
+        a.href = url; a.download = 'vault-' + new Date().toISOString().slice(0, 10) + '.vault';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    async function importVaultFile(file) {
+        var payload = JSON.parse(await file.text());
+        if (payload.version !== 1 || payload.type !== 'password-vault') throw new Error('Not a password vault file');
+        var existing = await dbGetAll('entries');
+        for (var i = 0; i < existing.length; i++) await dbDel('entries', existing[i].id);
+        await dbPut('config', fromB64(payload.salt), 'salt');
+        await dbPut('config', { iv: fromB64(payload.verify.iv), data: fromB64(payload.verify.data) }, 'verify');
+        for (var j = 0; j < payload.entries.length; j++) {
+            var e = payload.entries[j];
+            await dbPut('entries', { id: e.id, encData: { iv: fromB64(e.encData.iv), data: fromB64(e.encData.data) }, created: e.created, updated: e.updated });
+        }
+    }
+
+    // ── App state ─────────────────────────────────────────────────────────────
+    var activeKey     = null;
+    var allEntries    = [];   // decrypted, in memory
+    var filtered      = [];   // after search
+    var activeId      = null;
+    var isNew         = false;
+    var saveTimer     = null;
+    var copyTimer     = null;
+    var lockTimer     = null;
+    var lockWarning   = null;
+    var LOCK_IDLE_MS  = 5 * 60 * 1000;
+    var LOCK_WARN_MS  = 4 * 60 * 1000;
+
+    // ── Elements ──────────────────────────────────────────────────────────────
+    var elLocked      = document.getElementById('screen-locked');
+    var elUnlocked    = document.getElementById('screen-unlocked');
+    var elStatusText  = document.getElementById('vault-status-text');
+    var elWarning     = document.getElementById('vault-warning');
+    var elPassForm    = document.getElementById('pass-form');
+    var elPassInput   = document.getElementById('pass-input');
+    var elUnlockBtn   = document.getElementById('unlock-btn');
+    var elAuthError   = document.getElementById('auth-error');
+    var elEntryList   = document.getElementById('entry-list');
+    var elEntryPanel  = document.getElementById('entry-panel');
+    var elEntryCount  = document.getElementById('entry-count');
+    var elSearch      = document.getElementById('search-input');
+    var elSaveStatus  = document.getElementById('save-status');
+    var elStrength    = document.getElementById('strength-badge');
+    var elCopyCountdown = document.getElementById('copy-countdown');
+    var elLockBanner  = document.getElementById('autolock-banner');
+    var elLockCountdown = document.getElementById('lock-countdown');
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function fmtDate(ts) { return new Date(ts).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
+
+    function setSaveStatus(state, txt) {
+        elSaveStatus.className   = 'save-status' + (state ? ' ' + state : '');
+        elSaveStatus.textContent = txt || '';
+    }
+
+    // ── Auto-lock ─────────────────────────────────────────────────────────────
+    function resetAutoLock() {
+        clearTimeout(lockTimer);
+        clearTimeout(lockWarning);
+        elLockBanner.style.display = 'none';
+
+        lockWarning = setTimeout(function() {
+            elLockBanner.style.display = 'block';
+            var remaining = 60;
+            elLockCountdown.textContent = remaining;
+            var tick = setInterval(function() {
+                remaining--;
+                elLockCountdown.textContent = remaining;
+                if (remaining <= 0) clearInterval(tick);
+            }, 1000);
+        }, LOCK_WARN_MS);
+
+        lockTimer = setTimeout(function() {
+            if (activeKey) showLocked('AUTO-LOCKED // SESSION EXPIRED');
+        }, LOCK_IDLE_MS);
+    }
+
+    ['mousemove', 'keydown', 'pointerdown', 'scroll'].forEach(function(ev) {
+        window.addEventListener(ev, function() { if (activeKey) resetAutoLock(); }, { passive: true });
+    });
+
+    // ── Clipboard copy with countdown clear ───────────────────────────────────
+    var clipClearTimer = null;
+
+    async function copyWithClear(text, btnEl) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (e) {
+            // Fallback for older browsers
+            var ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+
+        var orig = btnEl.textContent;
+        btnEl.textContent = 'COPIED';
+        btnEl.disabled    = true;
+
+        clearTimeout(clipClearTimer);
+        var countdown = 30;
+        elCopyCountdown.textContent = countdown + 's';
+
+        var tick = setInterval(function() {
+            countdown--;
+            elCopyCountdown.textContent = countdown + 's';
+            if (countdown <= 0) {
+                clearInterval(tick);
+                elCopyCountdown.textContent = '';
+                // Attempt to clear clipboard
+                navigator.clipboard.writeText('').catch(function() {});
+            }
+        }, 1000);
+
+        clipClearTimer = setTimeout(function() {
+            btnEl.textContent = orig;
+            btnEl.disabled    = false;
+        }, 2000);
+    }
+
+    // ── Render list ───────────────────────────────────────────────────────────
+    function applySearch(query) {
+        var q = (query || '').toLowerCase().trim();
+        filtered = q
+            ? allEntries.filter(function(e) {
+                return (e.title + e.username + e.url).toLowerCase().indexOf(q) !== -1;
+              })
+            : allEntries.slice();
+    }
+
+    function renderList() {
+        elEntryCount.textContent = allEntries.length + ' entr' + (allEntries.length === 1 ? 'y' : 'ies');
+        if (filtered.length === 0) {
+            elEntryList.innerHTML = '<div class="no-entries">' + (allEntries.length === 0 ? 'VAULT EMPTY — click + ADD to create your first entry' : 'NO MATCH FOUND') + '</div>';
+            return;
+        }
+        elEntryList.innerHTML = filtered.map(function(e) {
+            var active = e.id === activeId ? ' active' : '';
+            var sub    = e.username || e.url || '';
+            return '<div class="entry-item' + active + '" data-id="' + esc(e.id) + '">'
+                + '<span class="entry-col-title">' + esc(e.title || 'Untitled') + '</span>'
+                + '<span class="entry-col-user">'  + esc(sub) + '</span>'
+                + '<span class="entry-col-date">'  + fmtDate(e.updated) + '</span>'
+                + '</div>';
+        }).join('');
+    }
+
+    // ── Open / close entry panel ──────────────────────────────────────────────
+    function openPanel(entry) {
+        activeId  = entry ? entry.id : null;
+        isNew     = !entry;
+        document.getElementById('f-title').value = entry ? entry.title    : '';
+        document.getElementById('f-url').value   = entry ? entry.url      : '';
+        document.getElementById('f-user').value  = entry ? entry.username : '';
+        document.getElementById('f-pass').value  = entry ? entry.password : '';
+        document.getElementById('f-notes').value = entry ? entry.notes    : '';
+        document.getElementById('f-pass').type   = 'password';
+        document.getElementById('toggle-pass-btn').textContent = 'SHOW';
+        updateStrength();
+        elEntryPanel.hidden = false;
+        setSaveStatus('', '');
+        renderList();
+        document.getElementById('f-title').focus();
+    }
+
+    function updateStrength() {
+        var pwd = document.getElementById('f-pass').value;
+        var s   = passwordStrength(pwd);
+        if (s) {
+            elStrength.textContent  = s.label;
+            elStrength.className    = 'strength-badge ' + s.cls;
+            elStrength.style.display = '';
+        } else {
+            elStrength.style.display = 'none';
+        }
+    }
+
+    // ── Autosave ──────────────────────────────────────────────────────────────
+    function scheduleAutosave() {
+        clearTimeout(saveTimer);
+        setSaveStatus('unsaved', 'UNSAVED');
+        saveTimer = setTimeout(doSave, 1400);
+    }
+
+    async function doSave() {
+        if (!activeKey) return;
+        var title = document.getElementById('f-title').value.trim();
+        var url   = document.getElementById('f-url').value.trim();
+        var user  = document.getElementById('f-user').value.trim();
+        var pass  = document.getElementById('f-pass').value;
+        var notes = document.getElementById('f-notes').value;
+        if (!title && !url && !user && !pass) return;
+
+        setSaveStatus('saving', 'ENCRYPTING…');
+        try {
+            var existing = allEntries.find(function(e) { return e.id === activeId; });
+            var entry = {
+                id:       existing ? existing.id : newId(),
+                created:  existing ? existing.created : Date.now(),
+                title: title, url: url, username: user, password: pass, notes: notes,
+            };
+            if (!existing) activeId = entry.id;
+            await persistEntry(activeKey, entry);
+            allEntries = await loadAllEntries(activeKey);
+            isNew = false;
+            applySearch(elSearch.value);
+            renderList();
+            setSaveStatus('saved', 'SAVED');
+        } catch (e) {
+            setSaveStatus('unsaved', 'SAVE FAILED');
+        }
+    }
+
+    // ── Lock / unlock screens ─────────────────────────────────────────────────
+    async function showLocked(msg) {
+        clearTimeout(saveTimer);
+        clearTimeout(lockTimer);
+        clearTimeout(lockWarning);
+        activeKey = null; activeId = null; allEntries = []; filtered = [];
+        elLocked.hidden   = false;
+        elUnlocked.hidden = true;
+        elLockBanner.style.display = 'none';
+        elPassInput.value = '';
+        elAuthError.textContent = msg || '';
+
+        var exists = await vaultExists();
+        if (exists) {
+            elStatusText.textContent = 'LOCKED';
+            elWarning.innerHTML      = 'Enter your passphrase to decrypt the vault.';
+            elUnlockBtn.textContent  = 'UNLOCK VAULT';
+        } else {
+            elStatusText.textContent = 'NOT INITIALISED';
+            elWarning.innerHTML      = '<strong>First time?</strong> Choose a master passphrase. '
+                + 'All entries are encrypted with AES-256-GCM and stored only in this browser. '
+                + 'There is no server, no account, and <strong>no recovery</strong> — '
+                + 'if you lose the passphrase, the vault cannot be decrypted.';
+            elUnlockBtn.textContent  = 'INITIALISE VAULT';
+        }
+        elPassInput.focus();
+    }
+
+    function showUnlocked() {
+        elLocked.hidden     = false;
+        elLocked.hidden     = true;
+        elUnlocked.hidden   = false;
+        elEntryPanel.hidden = true;
+        activeId = null;
+        applySearch('');
+        renderList();
+        resetAutoLock();
+    }
+
+    // ── Events: auth ──────────────────────────────────────────────────────────
+    elPassForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var pass = elPassInput.value;
+        if (!pass) return;
+        elUnlockBtn.disabled    = true;
+        elUnlockBtn.textContent = 'DERIVING KEY…';
+        elUnlockBtn.classList.add('deriving');
+        elAuthError.textContent = '';
+        try {
+            var exists = await vaultExists();
+            var key    = exists ? await openVault(pass) : await createVault(pass);
+            if (!key) {
+                elAuthError.textContent = 'PASSPHRASE REJECTED — DECRYPTION FAILED';
+                elPassInput.value = ''; elPassInput.focus(); return;
+            }
+            activeKey  = key;
+            allEntries = await loadAllEntries(key);
+            showUnlocked();
+        } catch (err) {
+            elAuthError.textContent = 'ERROR: ' + err.message;
+        } finally {
+            elUnlockBtn.disabled = false;
+            elUnlockBtn.classList.remove('deriving');
+            elUnlockBtn.textContent = (await vaultExists()) ? 'UNLOCK VAULT' : 'INITIALISE VAULT';
+        }
+    });
+
+    // ── Events: toolbar ───────────────────────────────────────────────────────
+    document.getElementById('lock-btn').addEventListener('click', function() { showLocked(); });
+
+    document.getElementById('add-btn').addEventListener('click', function() { openPanel(null); });
+
+    document.getElementById('export-btn').addEventListener('click', async function() {
+        try { await exportVault(); } catch (e) { alert('Export failed: ' + e.message); }
+    });
+
+    document.getElementById('import-input').addEventListener('change', async function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        if (!confirm('IMPORT VAULT?\n\nThis replaces all current entries. You will need to re-enter the imported vault\'s passphrase.')) { e.target.value = ''; return; }
+        try {
+            await importVaultFile(file);
+            await showLocked('IMPORT COMPLETE — UNLOCK WITH VAULT PASSPHRASE');
+        } catch (err) { alert('Import failed: ' + err.message); }
+        e.target.value = '';
+    });
+
+    // ── Events: search ────────────────────────────────────────────────────────
+    elSearch.addEventListener('input', function() {
+        applySearch(elSearch.value);
+        renderList();
+    });
+
+    // ── Events: entry list click ──────────────────────────────────────────────
+    elEntryList.addEventListener('click', function(e) {
+        var item = e.target.closest('.entry-item');
+        if (!item) return;
+        var entry = allEntries.find(function(x) { return x.id === item.dataset.id; });
+        if (entry) openPanel(entry);
+    });
+
+    // ── Events: form inputs → autosave ────────────────────────────────────────
+    ['f-title','f-url','f-user','f-pass','f-notes'].forEach(function(id) {
+        document.getElementById(id).addEventListener('input', scheduleAutosave);
+    });
+    document.getElementById('f-pass').addEventListener('input', updateStrength);
+
+    // ── Events: password controls ─────────────────────────────────────────────
+    document.getElementById('toggle-pass-btn').addEventListener('click', function() {
+        var f   = document.getElementById('f-pass');
+        var btn = document.getElementById('toggle-pass-btn');
+        if (f.type === 'password') { f.type = 'text';     btn.textContent = 'HIDE'; }
+        else                       { f.type = 'password'; btn.textContent = 'SHOW'; }
+    });
+
+    document.getElementById('copy-pass-btn').addEventListener('click', function() {
+        var pwd = document.getElementById('f-pass').value;
+        if (!pwd) return;
+        copyWithClear(pwd, document.getElementById('copy-pass-btn'));
+    });
+
+    document.getElementById('copy-user-btn').addEventListener('click', function() {
+        var user = document.getElementById('f-user').value;
+        if (!user) return;
+        var btn = document.getElementById('copy-user-btn');
+        navigator.clipboard.writeText(user).catch(function() {});
+        var orig = btn.textContent; btn.textContent = 'COPIED'; btn.disabled = true;
+        setTimeout(function() { btn.textContent = orig; btn.disabled = false; }, 2000);
+    });
+
+    // ── Events: password generator ────────────────────────────────────────────
+    document.getElementById('gen-btn').addEventListener('click', function() {
+        var len     = parseInt(document.getElementById('gen-length').value, 10) || 20;
+        var upper   = document.getElementById('gen-upper').checked;
+        var lower   = document.getElementById('gen-lower').checked;
+        var digits  = document.getElementById('gen-digits').checked;
+        var symbols = document.getElementById('gen-symbols').checked;
+        var pwd     = generatePassword(Math.max(8, Math.min(64, len)), upper, lower, digits, symbols);
+        document.getElementById('f-pass').value = pwd;
+        document.getElementById('f-pass').type  = 'text';
+        document.getElementById('toggle-pass-btn').textContent = 'HIDE';
+        updateStrength();
+        scheduleAutosave();
+    });
+
+    // ── Events: delete entry ──────────────────────────────────────────────────
+    document.getElementById('delete-btn').addEventListener('click', async function() {
+        if (!activeId && isNew) { elEntryPanel.hidden = true; return; }
+        if (!activeId) return;
+        if (!confirm('DELETE THIS ENTRY? This cannot be undone.')) return;
+        clearTimeout(saveTimer);
+        await dbDel('entries', activeId);
+        allEntries = await loadAllEntries(activeKey);
+        activeId = null; isNew = false;
+        elEntryPanel.hidden = true;
+        applySearch(elSearch.value);
+        renderList();
+    });
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    (async function() {
+        _db = await openDB();
+        await showLocked();
+    })();
+    </script>
+</body>
+</html>
