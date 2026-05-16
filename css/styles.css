@@ -165,8 +165,8 @@ body:has(#terminal.maximized) #terminal-bg {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto 1fr;
     grid-template-areas:
-      "about work"
       "about contact"
+      "about work"
       "about .";
     column-gap: 1.5rem;
     row-gap: 0.75rem;
@@ -444,13 +444,28 @@ body:has(#terminal.maximized) #terminal-bg {
 .hud-module {
   position: relative;
   pointer-events: auto;
-  background: var(--glass-bg);
+  border-radius: 4px;
+  background:
+    /* Convex glass catch-light — top-left specular highlight */
+    radial-gradient(ellipse 75% 45% at 28% 14%, rgba(255, 255, 255, 0.09) 0%, transparent 100%),
+    /* Edge vignette — glass curves away from viewer at all sides */
+    radial-gradient(ellipse at center, transparent 28%, rgba(0, 0, 0, 0.55) 100%),
+    var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   padding: 1.75rem;
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    /* Glass top-edge highlight */
+    inset 0 2px 4px rgba(255, 255, 255, 0.09),
+    /* Left and right curvature shadows */
+    inset  55px 0 75px rgba(0, 0, 0, 0.28),
+    inset -55px 0 75px rgba(0, 0, 0, 0.28),
+    /* Top and bottom curvature shadows */
+    inset 0  40px 60px rgba(0, 0, 0, 0.18),
+    inset 0 -40px 60px rgba(0, 0, 0, 0.22);
 }
 
 .module-meta {

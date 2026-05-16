@@ -734,14 +734,20 @@ function initFloatingMode(cli) {
 
     document.body.classList.add('floating-mode');
 
+    // Suppress top/left transitions during initial placement so modules don't animate in from (0,0).
     modules.forEach((mod, i) => {
+      mod.style.transition = 'none';
       mod.style.left = `${captured[i].left}px`;
       mod.style.top = `${captured[i].top}px`;
       mod.style.width = `${captured[i].width}px`;
       mod.style.zIndex = String(zCounter++);
     });
 
-    runIntroSequence(modules, cli);
+    // Second rAF: paint cycle complete, re-enable transitions before the intro sequence runs.
+    requestAnimationFrame(() => {
+      modules.forEach((mod) => { mod.style.transition = ''; });
+      runIntroSequence(modules, cli);
+    });
   });
 
   // Drag handling — header strip only, with movement threshold so clicks/hovers still work.
@@ -805,26 +811,42 @@ function initFloatingMode(cli) {
     handle.addEventListener('pointercancel', endDrag);
   });
 
-  // Maximize snap-to-center: save floating position, clear it while maximized, restore on minimize.
+  // Maximize/minimize with WAAPI so top animates smoothly in both directions.
   const mainTerminal = document.getElementById('terminal');
   const maxBtn = mainTerminal?.querySelector('.maximize-btn');
   if (mainTerminal && maxBtn) {
+    const ANIM_DURATION = 1100;
+    const ANIM_EASING   = 'cubic-bezier(0.16, 1, 0.3, 1)';
     let saved = null;
+    // Capture top BEFORE the click fires and the toggle handler changes the class + CSS rule.
+    let preClickTop = 0;
+    maxBtn.addEventListener('pointerdown', () => {
+      preClickTop = mainTerminal.getBoundingClientRect().top;
+    });
     maxBtn.addEventListener('click', () => {
-      // Runs after the toggle handler above (registration order), so state is current.
       if (mainTerminal.classList.contains('maximized')) {
+        // Maximising: slide from current floating top → 5vh (the CSS rule target).
         saved = {
           left: mainTerminal.style.left,
-          top: mainTerminal.style.top,
+          top:  mainTerminal.style.top,
           width: mainTerminal.style.width,
         };
-        mainTerminal.style.left = '';
-        mainTerminal.style.top = '';
+        mainTerminal.animate(
+          [{ top: `${preClickTop}px` }, { top: `${window.innerHeight * 0.05}px` }],
+          { duration: ANIM_DURATION, easing: ANIM_EASING, fill: 'none' }
+        );
+        mainTerminal.style.left  = '';
+        mainTerminal.style.top   = '';
         mainTerminal.style.width = '';
         mainTerminal.style.zIndex = String(++zCounter);
       } else if (saved) {
-        mainTerminal.style.left = saved.left;
-        mainTerminal.style.top = saved.top;
+        // Minimising: slide from 5vh → saved floating top.
+        mainTerminal.animate(
+          [{ top: `${preClickTop}px` }, { top: saved.top }],
+          { duration: ANIM_DURATION, easing: ANIM_EASING, fill: 'none' }
+        );
+        mainTerminal.style.left  = saved.left;
+        mainTerminal.style.top   = saved.top;
         mainTerminal.style.width = saved.width;
       }
     });
@@ -852,6 +874,10 @@ async function runIntroSequence(modules, cli) {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const subModules = modules.filter((m) => m.classList.contains('sub-module'));
 
+  // Save the terminal's floating left/width before maximize clears inline styles.
+  const floatLeft  = mainTerminal.style.left;
+  const floatWidth = mainTerminal.style.width;
+
   // Open the main terminal (programmatic click fires both the toggle and snap-to-center handlers).
   maxBtn.click();
 
@@ -872,10 +898,33 @@ async function runIntroSequence(modules, cli) {
 
   await wait(900);
 
-  // Minimize the main terminal back to its floating header position.
-  maxBtn.click();
+  // Calculate target Y: just below the lowest sub-module.
+  const belowY = subModules.reduce((max, m) => {
+    const b = parseFloat(m.style.top || 0) + m.offsetHeight;
+    return b > max ? b : max;
+  }, 0) + 32;
 
-  await wait(700);
+  // Minimize smoothly using the Web Animations API.
+  // We start the animation BEFORE removing the maximized class so the browser captures the live
+  // pixel position (top: 5vh resolved) as the from-value. CSS !important would block any
+  // attempt to lock that position via style.top while the class is still present.
+  const rect = mainTerminal.getBoundingClientRect();
+  mainTerminal.animate(
+    [{ top: `${rect.top}px` }, { top: `${belowY}px` }],
+    { duration: 1100, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'none' }
+  );
+
+  // Commit the final resting position as inline styles (WAAPI overrides during playback, then
+  // these take over when the animation ends with fill:'none').
+  mainTerminal.style.left      = floatLeft;
+  mainTerminal.style.top       = `${belowY}px`;
+  mainTerminal.style.width     = floatWidth;
+  mainTerminal.style.transform = '';
+
+  // Removing maximized fires the max-height CSS collapse simultaneously with the WAAPI slide.
+  mainTerminal.classList.remove('maximized');
+
+  await wait(1100);
   document.body.classList.remove('intro-active');
   document.body.classList.add('intro-complete');
 
