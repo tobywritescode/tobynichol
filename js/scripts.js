@@ -4,6 +4,8 @@
 
 import { Renderer, Program, Mesh, Color, Triangle } from 'https://esm.sh/ogl';
 
+const PAGE_START = Date.now();
+
 // --- WebGL Background Logic (Shared) ---
 const vertexShader = `
 attribute vec2 position;
@@ -383,16 +385,25 @@ export class TerminalCLI {
         if (!this.history || !this.input) return;
 
         this.commands = {
-            'help': () => this.showHelp(),
-            'bio': () => this.showBio(),
-            'work': () => this.showWork(),
-            'links': () => this.showLinks(),
+            'help':    () => this.showHelp(),
+            'bio':     () => this.showBio(),
+            'work':    () => this.showWork(),
+            'links':   () => this.showLinks(),
             'contact': () => this.showContact(),
-            'logs': () => this.showLogs(),
-            'articles': () => this.showArticles(),
-            'clear': () => this.clear(),
-            'ls': () => this.showWork(),
-            'whois': () => this.showBio()
+            'logs':    () => this.showLogs(),
+            'articles':() => this.showArticles(),
+            'clear':   () => this.clear(),
+            'status':  () => this.showStatus(),
+            'skills':  () => this.showSkills(),
+            'cv':      () => this.showCV(),
+            'uptime':  () => this.showUptime(),
+            // Easter eggs — not listed in help
+            'sudo':    (args) => this.showSudo(args),
+            'decrypt': (args) => this.showDecrypt(args),
+            // Aliases
+            'ls':      () => this.showWork(),
+            'whois':   () => this.showBio(),
+            'uname':   () => this.showStatus(),
         };
 
         this.init();
@@ -430,17 +441,18 @@ export class TerminalCLI {
 
     handleCommand(cmd) {
         if (cmd === '') return;
-        
+
         this.addLine(`<span class="prompt-user">[USER@TOBYNICHOL]:~ ></span> ${cmd}`);
 
-        // Strip leading/trailing quotes and leading slash
         let cleanCmd = cmd.replace(/^["']|["']$/g, '');
-        if (cleanCmd.startsWith('/')) {
-            cleanCmd = cleanCmd.substring(1);
-        }
+        if (cleanCmd.startsWith('/')) cleanCmd = cleanCmd.substring(1);
 
-        if (this.commands[cleanCmd]) {
-            this.commands[cleanCmd]();
+        const parts   = cleanCmd.trim().split(/\s+/);
+        const baseCmd = parts[0];
+        const args    = parts.slice(1);
+
+        if (this.commands[baseCmd]) {
+            this.commands[baseCmd](args);
         } else {
             this.addLine(`Command not found: ${cmd}. Type \"help\" for capabilities.`, 'terminal-error');
         }
@@ -476,6 +488,10 @@ export class TerminalCLI {
         await this.typeLine("  \"links\"    - External network nodes", '', 5);
         await this.typeLine("  \"articles\" - Intelligence database (Briefings)", '', 5);
         await this.typeLine("  \"contact\"  - Establish comms link", '', 5);
+        await this.typeLine("  \"status\"   - Live system diagnostics", '', 5);
+        await this.typeLine("  \"skills\"   - Operator capability matrix", '', 5);
+        await this.typeLine("  \"cv\"       - Retrieve personnel document", '', 5);
+        await this.typeLine("  \"uptime\"   - Session status", '', 5);
         await this.typeLine("  \"clear\"    - Wipe console buffer", '', 5);
     }
 
@@ -535,6 +551,119 @@ export class TerminalCLI {
 
     clear() {
         this.history.innerHTML = '';
+    }
+
+    async showStatus() {
+        const now = new Date();
+        const ua  = navigator.userAgent;
+        let browser = 'UNKNOWN';
+        if      (ua.includes('Edg/'))    browser = 'Edge';
+        else if (ua.includes('Firefox')) browser = 'Firefox';
+        else if (ua.includes('Chrome'))  browser = 'Chromium';
+        else if (ua.includes('Safari'))  browser = 'Safari';
+        let engine = 'UNKNOWN';
+        if      (ua.includes('Gecko/'))  engine = 'Gecko';
+        else if (ua.includes('WebKit'))  engine = 'Blink/WebKit';
+        const isMobile = /Mobi|Android|iPhone|iPad/i.test(ua);
+
+        this.addLine("SYSTEM_STATUS:", 'terminal-info');
+        await this.typeLine(`  UTC_TIMESTAMP  : ${now.toUTCString()}`, '', 4);
+        await this.typeLine(`  UNIX_EPOCH     : ${Math.floor(Date.now() / 1000)}`, '', 4);
+        await this.typeLine(`  DISPLAY_MATRIX : ${screen.width}x${screen.height} @ ${window.devicePixelRatio}x DPR`, '', 4);
+        await this.typeLine(`  RENDER_ENGINE  : ${engine} // ${browser}`, '', 4);
+        await this.typeLine(`  INTERFACE_TYPE : ${isMobile ? 'MOBILE' : 'DESKTOP'}`, '', 4);
+        await this.typeLine(`  SESSION_UPTIME : ${this._fmtUptime()}`, '', 4);
+        await this.typeLine(`  OS_VERSION     : TN_OS v2.1.0 // ALL SYSTEMS NOMINAL`, '', 4);
+    }
+
+    async showSkills() {
+        this.addLine("OPERATOR_CAPABILITY_MATRIX:", 'terminal-info');
+        await this.typeLine("  // CORE LOADOUT", 'terminal-info', 6);
+        await this.typeLine("  Java            — Spring Boot, Microservices, JVM Internals", '', 5);
+        await this.typeLine("  Python          — Contract Logic, Quantitative Finance", '', 5);
+        await this.typeLine("  Fintech Arch    — Institutional Banking, Low-Latency Systems", '', 5);
+        await this.typeLine("  // SECONDARY", 'terminal-info', 6);
+        await this.typeLine("  Vanilla JS/TS   — ES Modules, WebGL, Web Crypto API", '', 5);
+        await this.typeLine("  REST & Events   — Kafka, WebSockets, Event-Driven Design", '', 5);
+        await this.typeLine("  Data Stores     — PostgreSQL, Redis, DynamoDB", '', 5);
+        await this.typeLine("  // OPERATIONAL", 'terminal-info', 6);
+        await this.typeLine("  Infra           — Docker, Kubernetes, CI/CD Pipelines", '', 5);
+        await this.typeLine("  Security        — Zero-Trust, AES-256, OAuth2 / PKCE", '', 5);
+        await this.typeLine("  Environment     — Linux, Git, Terminal-Native Workflow", '', 5);
+    }
+
+    async showCV() {
+        this.addLine("RETRIEVING PERSONNEL DOCUMENT...", 'terminal-info');
+        await new Promise(r => setTimeout(r, 500));
+        await this.typeLine("  CLASSIFICATION : DECLASSIFIED", '', 6);
+        await this.typeLine("  FORMAT         : PDF // SIGNED", '', 6);
+        await new Promise(r => setTimeout(r, 200));
+        this.addLine(`  <a href='Toby-Nichol-CV.pdf' target='_blank'>${ICONS.external} Toby-Nichol-CV.pdf — OPEN DOCUMENT</a>`);
+    }
+
+    async showUptime() {
+        await this.typeLine(`SYSTEM ONLINE: ${this._fmtUptime()} // SESSION STABLE`, '', 8);
+    }
+
+    _fmtUptime() {
+        const elapsed = Date.now() - PAGE_START;
+        const s = Math.floor(elapsed / 1000) % 60;
+        const m = Math.floor(elapsed / 60000) % 60;
+        const h = Math.floor(elapsed / 3600000);
+        return (h > 0 ? h + 'h ' : '') + (m > 0 ? m + 'm ' : '') + s + 's';
+    }
+
+    async showSudo(args) {
+        await this.typeLine(`[sudo] password for USER: `, '', 8);
+        await new Promise(r => setTimeout(r, 700));
+        await this.typeLine("ACCESS DENIED // CLEARANCE LEVEL INSUFFICIENT", 'terminal-error', 12);
+    }
+
+    async showDecrypt(args) {
+        const SECRETS = {
+            'tango':      'OPERATOR IDENTITY CONFIRMED. WELCOME BACK.',
+            'classified': 'THE REAL STACK WAS THE FRIENDS WE MADE ALONG THE WAY. (Zero dependencies.)',
+            'alpha':      'STACK SOVEREIGNTY IS NOT A PREFERENCE. IT IS A DISCIPLINE.',
+            'override':   'OVERRIDE SEQUENCE ACCEPTED. THERE IS NOTHING ELSE HERE. OR IS THERE.',
+            'v1':         'KERNEL REJECTION WAS THE BEST THING THAT EVER HAPPENED TO THIS SYSTEM.',
+        };
+
+        const key     = (args[0] || '').toLowerCase();
+        const payload = SECRETS[key];
+        const CHARS   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*><[]{}';
+
+        const scramble = (len) => Array.from(
+            { length: len },
+            () => CHARS[Math.floor(Math.random() * CHARS.length)]
+        ).join('');
+
+        this.addLine("INITIATING DECRYPTION SEQUENCE...", 'terminal-info');
+        await new Promise(r => setTimeout(r, 350));
+
+        const line = document.createElement('div');
+        line.className = 'terminal-line';
+        this.history.appendChild(line);
+
+        if (!payload) {
+            for (let i = 0; i < 5; i++) {
+                line.textContent = scramble(40);
+                await new Promise(r => setTimeout(r, 120));
+            }
+            line.textContent = '';
+            await this.typeLine("DECRYPTION FAILED // INVALID KEY", 'terminal-error', 12);
+            return;
+        }
+
+        // Scramble then progressively reveal
+        for (let i = 0; i < 8; i++) {
+            line.textContent = scramble(payload.length);
+            await new Promise(r => setTimeout(r, 80));
+        }
+        for (let i = 0; i <= payload.length; i++) {
+            line.textContent = payload.slice(0, i) + scramble(payload.length - i);
+            await new Promise(r => setTimeout(r, 22));
+        }
+        line.textContent = payload;
     }
 }
 
