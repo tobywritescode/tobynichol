@@ -163,10 +163,11 @@ body:has(#terminal.maximized) #terminal-bg {
   .sub-terminals {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
       "about contact"
       "about work"
+      "about stuff"
       "about .";
     column-gap: 1.5rem;
     row-gap: 0.75rem;
@@ -175,6 +176,7 @@ body:has(#terminal.maximized) #terminal-bg {
   #terminal-about { grid-area: about; }
   #terminal-work { grid-area: work; }
   #terminal-contact { grid-area: contact; }
+  #terminal-stuff { grid-area: stuff; }
 
   /* About is the primary intro panel - always expanded on desktop */
   #terminal-about,

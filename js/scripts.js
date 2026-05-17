@@ -511,6 +511,7 @@ export class TerminalCLI {
         this.addLine("PROJECT_DEPLOYMENT_LOGS:", 'terminal-info');
         this.addLine(`  [LIVE]  <a href='https://stratplay.app' target='_blank'>${ICONS.external} StratPlay.app</a> - Strategy & Analytics`);
         this.addLine(`  [LIVE]  <a href='https://tobynichol.computer/telemetry' target='_blank'>${ICONS.external} ETH_Telemetry_Grid</a> - Blockchain Intelligence`);
+        this.addLine(`  [LIVE]  <a href='https://project-1s2hj.vercel.app/' target='_blank'>${ICONS.external} willit.app</a> - Will It Sell?`);
         this.addLine(`  [LIVE]  <a href='/forensics' target='_blank'>${ICONS.external} Page_Weight_Forensics</a> - Tactical Payload Audit`);
         this.addLine(`  [LIVE]  <a href='/notes' target='_blank'>${ICONS.external} Sovereign_Notes</a> - AES-256 Encrypted Local Storage`);
         this.addLine(`  [LIVE]  <a href='/vault' target='_blank'>${ICONS.external} Sovereign_Vault</a> - AES-256 Password Manager`);
