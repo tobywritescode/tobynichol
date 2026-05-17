@@ -577,9 +577,8 @@ body.floating-mode .hud-module.dragging {
 }
 
 body.floating-mode #terminal.maximized {
-  left: 50% !important;
+  left: calc(50vw - min(400px, 45vw)) !important;
   top: 5vh !important;
-  transform: translateX(-50%);
   width: min(800px, 90vw);
   max-width: 800px;
   max-height: 85vh;

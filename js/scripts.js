@@ -6,6 +6,46 @@ import { Renderer, Program, Mesh, Color, Triangle } from 'https://esm.sh/ogl';
 
 const PAGE_START = Date.now();
 
+const ANIM_DURATION = 1100;
+const ANIM_EASING   = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+// FLIP animation: records where el IS (first), applies a state change via applyFn (which may
+// snap el anywhere CSS wants), then slides it from the old position to the new one.
+//
+// The invert transform is written inline and a forced reflow commits it BEFORE the animation
+// is created — this guarantees the browser paints the start position first, so there is no
+// frame-zero snap. The slide itself uses WAAPI (not a CSS transition) so the element's own
+// max-height/padding CSS transitions keep running independently for the size change.
+function flipPosition(el, first, applyFn) {
+  applyFn();
+  // Cancel only our own previous flip — NOT el.getAnimations(), which would also kill the
+  // CSS max-height/padding transitions that make the terminal expand/collapse smoothly.
+  if (el._flipAnim) el._flipAnim.cancel();
+  const last = el.getBoundingClientRect();
+  const dx   = first.left - last.left;
+  const dy   = first.top  - last.top;
+  if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+
+  // INVERT — jump to the old position inline (no CSS transform transition exists, so instant).
+  el.style.transform = `translate(${dx}px, ${dy}px)`;
+  // Force the browser to commit that position.
+  void el.offsetWidth;
+  // Drop the inline transform back to identity; WAAPI below paints the slide before this shows.
+  el.style.transform = 'none';
+
+  const anim = el.animate(
+    [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }],
+    { duration: ANIM_DURATION, easing: ANIM_EASING, fill: 'none' }
+  );
+  el._flipAnim = anim;
+  const clear = () => {
+    el.style.transform = '';
+    if (el._flipAnim === anim) el._flipAnim = null;
+  };
+  anim.addEventListener('finish', clear);
+  anim.addEventListener('cancel', clear);
+}
+
 // --- WebGL Background Logic (Shared) ---
 const vertexShader = `
 attribute vec2 position;
@@ -812,43 +852,40 @@ function initFloatingMode(cli) {
     handle.addEventListener('pointercancel', endDrag);
   });
 
-  // Maximize/minimize with WAAPI so top animates smoothly in both directions.
+  // Maximize / minimize: FLIP animation so the terminal slides smoothly regardless of CSS
+  // !important rules. We capture position in pointerdown (before the toggle handler fires),
+  // then use that rect as the FIRST position inside flipPosition.
   const mainTerminal = document.getElementById('terminal');
   const maxBtn = mainTerminal?.querySelector('.maximize-btn');
   if (mainTerminal && maxBtn) {
-    const ANIM_DURATION = 1100;
-    const ANIM_EASING   = 'cubic-bezier(0.16, 1, 0.3, 1)';
-    let saved = null;
-    // Capture top BEFORE the click fires and the toggle handler changes the class + CSS rule.
-    let preClickTop = 0;
+    let saved         = null;
+    let preClickFirst = null;
     maxBtn.addEventListener('pointerdown', () => {
-      preClickTop = mainTerminal.getBoundingClientRect().top;
+      preClickFirst = mainTerminal.getBoundingClientRect();
     });
     maxBtn.addEventListener('click', () => {
+      if (!preClickFirst) return;
       if (mainTerminal.classList.contains('maximized')) {
-        // Maximising: slide from current floating top → 5vh (the CSS rule target).
+        // State is now maximised (toggle already fired). Save & clear inline styles so the CSS
+        // rule owns the final position, then FLIP from where we were.
         saved = {
-          left: mainTerminal.style.left,
-          top:  mainTerminal.style.top,
+          left:  mainTerminal.style.left,
+          top:   mainTerminal.style.top,
           width: mainTerminal.style.width,
         };
-        mainTerminal.animate(
-          [{ top: `${preClickTop}px` }, { top: `${window.innerHeight * 0.05}px` }],
-          { duration: ANIM_DURATION, easing: ANIM_EASING, fill: 'none' }
-        );
-        mainTerminal.style.left  = '';
-        mainTerminal.style.top   = '';
-        mainTerminal.style.width = '';
-        mainTerminal.style.zIndex = String(++zCounter);
+        flipPosition(mainTerminal, preClickFirst, () => {
+          mainTerminal.style.left   = '';
+          mainTerminal.style.top    = '';
+          mainTerminal.style.width  = '';
+          mainTerminal.style.zIndex = String(++zCounter);
+        });
       } else if (saved) {
-        // Minimising: slide from 5vh → saved floating top.
-        mainTerminal.animate(
-          [{ top: `${preClickTop}px` }, { top: saved.top }],
-          { duration: ANIM_DURATION, easing: ANIM_EASING, fill: 'none' }
-        );
-        mainTerminal.style.left  = saved.left;
-        mainTerminal.style.top   = saved.top;
-        mainTerminal.style.width = saved.width;
+        // State is now minimised. Restore inline position, then FLIP from centre.
+        flipPosition(mainTerminal, preClickFirst, () => {
+          mainTerminal.style.left  = saved.left;
+          mainTerminal.style.top   = saved.top;
+          mainTerminal.style.width = saved.width;
+        });
       }
     });
   }
@@ -875,12 +912,15 @@ async function runIntroSequence(modules, cli) {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const subModules = modules.filter((m) => m.classList.contains('sub-module'));
 
-  // Save the terminal's floating left/width before maximize clears inline styles.
+  // Save the terminal's floating position before maximize clears inline styles.
   const floatLeft  = mainTerminal.style.left;
   const floatWidth = mainTerminal.style.width;
 
-  // Open the main terminal (programmatic click fires both the toggle and snap-to-center handlers).
-  maxBtn.click();
+  // Maximise manually — bypasses the click handler so FLIP doesn't fire from a stale rect.
+  mainTerminal.classList.add('maximized');
+  mainTerminal.style.left  = '';
+  mainTerminal.style.top   = '';
+  mainTerminal.style.width = '';
 
   // Let the boot animation play out inside the now-maximized terminal.
   if (cli && cli.bootPromise) {
@@ -891,39 +931,29 @@ async function runIntroSequence(modules, cli) {
 
   await wait(500);
 
-  // Cascade sub-modules into view.
-  for (const mod of subModules) {
-    mod.classList.add('intro-revealed');
-    await wait(220);
-  }
-
-  await wait(900);
-
-  // Calculate target Y: just below the lowest sub-module.
+  // Calculate target Y: just below the lowest sub-module (positions exist even while hidden).
   const belowY = subModules.reduce((max, m) => {
     const b = parseFloat(m.style.top || 0) + m.offsetHeight;
     return b > max ? b : max;
   }, 0) + 32;
 
-  // Minimize smoothly using the Web Animations API.
-  // We start the animation BEFORE removing the maximized class so the browser captures the live
-  // pixel position (top: 5vh resolved) as the from-value. CSS !important would block any
-  // attempt to lock that position via style.top while the class is still present.
-  const rect = mainTerminal.getBoundingClientRect();
-  mainTerminal.animate(
-    [{ top: `${rect.top}px` }, { top: `${belowY}px` }],
-    { duration: 1100, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'none' }
-  );
+  // Slide the terminal down to its resting spot FIRST so it's clear of the sub-module area.
+  const first = mainTerminal.getBoundingClientRect();
+  flipPosition(mainTerminal, first, () => {
+    mainTerminal.style.left  = floatLeft;
+    mainTerminal.style.top   = `${belowY}px`;
+    mainTerminal.style.width = floatWidth;
+    mainTerminal.classList.remove('maximized');
+  });
 
-  // Commit the final resting position as inline styles (WAAPI overrides during playback, then
-  // these take over when the animation ends with fill:'none').
-  mainTerminal.style.left      = floatLeft;
-  mainTerminal.style.top       = `${belowY}px`;
-  mainTerminal.style.width     = floatWidth;
-  mainTerminal.style.transform = '';
+  // Let the terminal clear the centre before the panels appear.
+  await wait(650);
 
-  // Removing maximized fires the max-height CSS collapse simultaneously with the WAAPI slide.
-  mainTerminal.classList.remove('maximized');
+  // Now cascade sub-modules into the space the terminal vacated.
+  for (const mod of subModules) {
+    mod.classList.add('intro-revealed');
+    await wait(220);
+  }
 
   await wait(1100);
   document.body.classList.remove('intro-active');
