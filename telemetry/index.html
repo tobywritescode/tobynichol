@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TELEMETRY_GRID // v2.0</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', Courier, monospace; color: #00ffff; }
+        canvas#three-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        canvas#hud-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        #overlay { position: absolute; top: 20px; left: 20px; z-index: 10; font-size: 12px; letter-spacing: 2px; text-shadow: 0 0 10px rgba(0,255,255,0.5); }
+        @media (max-width: 600px) {
+            #overlay { top: 10px; left: 10px; font-size: 9px; letter-spacing: 1px; }
+            .status-line { margin-bottom: 2px; }
+        }
+        .glitch { animation: glitch 1s infinite; }
+        @keyframes glitch { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+    </style>
+
+    <!-- Three.js buildless setup: bare specifiers in main.js resolve to a single CDN module -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+    </script>
+</head>
+<body>
+    <canvas id="three-canvas"></canvas>
+    <canvas id="hud-canvas" style="display:none;"></canvas>
+
+    <script type="module" src="/telemetry/main.js"></script>
+</body>
+</html>
