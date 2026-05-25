@@ -549,6 +549,7 @@ export class TerminalCLI {
 
     async showWork() {
         this.addLine("PROJECT_DEPLOYMENT_LOGS:", 'terminal-info');
+        this.addLine(`  [LIVE]  <a href='/lucky28' target='_blank'>${ICONS.external} lucky28.agency</a> - Digital Craft Studio`);
         this.addLine(`  [LIVE]  <a href='https://project-1s2hj.vercel.app/' target='_blank'>${ICONS.external} willit.app</a> - Will It Sell?`);
         this.addLine(`  [LIVE]  <a href='https://stratplay.app' target='_blank'>${ICONS.external} StratPlay.app</a> - Strategy & Analytics`);
         this.addLine(`  [LIVE]  <a href='https://tobynichol.computer/telemetry' target='_blank'>${ICONS.external} ETH_Telemetry_Grid</a> - Blockchain Intelligence`);

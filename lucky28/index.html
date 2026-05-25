@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucky 28 — Coming Soon</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Mono:wght@300;400;500&family=Albert+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --paper: #FAF8F3;
+  --ink:   #0F0D0B;
+  --mid:   #6B6760;
+  --light: #B0ACA6;
+  --pink:  #E8527E;
+  --pink-d:#C42D5C;
+  --pink-l:#FBCFDE;
+  --teal:  #1FA896;
+  --teal-d:#0D7268;
+  --teal-l:#B2E6DC;
+  --border:rgba(15,13,11,0.1);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--paper);
+  font-family: 'Albert Sans', sans-serif;
+  color: var(--ink);
+}
+
+* { cursor: none !important; }
+
+/* ─── CURSOR ─── */
+#cur-dot {
+  position: fixed; z-index: 9999; pointer-events: none;
+  width: 5px; height: 5px; background: var(--pink);
+  border-radius: 50%;
+  top: 0; left: 0; transform: translate(-50%, -50%);
+}
+#cur-ring {
+  position: fixed; z-index: 9998; pointer-events: none;
+  width: 30px; height: 30px;
+  border: 1px solid rgba(15,13,11,0.2);
+  border-radius: 50%;
+  top: 0; left: 0; transform: translate(-50%, -50%);
+  transition: width .3s cubic-bezier(.25,.46,.45,.94),
+              height .3s cubic-bezier(.25,.46,.45,.94),
+              border-color .2s;
+}
+#cur-ring.big { width: 50px; height: 50px; border-color: var(--pink); }
+
+/* ─── CANVAS ─── */
+canvas {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  display: block;
+}
+
+/* ─── UI OVERLAY ─── */
+.ui {
+  position: fixed; inset: 0;
+  z-index: 10; pointer-events: none;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+/* Logo */
+.logo {
+  display: flex; align-items: baseline; gap: 5px;
+  position: fixed; top: 2rem; left: 50%;
+  transform: translateX(-50%);
+  animation: fadeDown .7s .2s ease both;
+}
+.logo-lucky {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 1rem; letter-spacing: -.02em; color: var(--ink);
+}
+.logo-28 {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 1rem; letter-spacing: -.02em;
+  color: transparent; -webkit-text-stroke: 1.5px var(--pink);
+}
+
+/* Centre wordmark */
+.wordmark {
+  text-align: center; line-height: 1;
+  animation: fadeUp .9s .5s cubic-bezier(.25,.46,.45,.94) both;
+}
+.wm-lucky {
+  display: block;
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: clamp(4.5rem, 13vw, 11rem);
+  letter-spacing: -.05em; color: var(--ink);
+  line-height: .85;
+}
+.wm-28 {
+  display: block;
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: clamp(4.5rem, 13vw, 11rem);
+  letter-spacing: -.05em;
+  color: transparent; -webkit-text-stroke: 2.5px var(--ink);
+  line-height: .85;
+}
+
+/* Coming soon tag */
+.cs-tag {
+  display: inline-flex; align-items: center; gap: .6rem;
+  border: 1px solid var(--border);
+  padding: .35rem .9rem;
+  margin-bottom: 2.25rem;
+  animation: fadeUp .6s .3s ease both;
+}
+.cs-tag-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--pink);
+  animation: pulseDot 2.5s 1.5s ease-in-out infinite;
+}
+.cs-tag span {
+  font-family: 'DM Mono', monospace; font-size: .55rem;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--mid);
+}
+
+/* Tagline */
+.tagline {
+  font-family: 'DM Mono', monospace; font-size: .62rem;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--mid); margin-top: 1.25rem;
+  animation: fadeUp .6s .85s ease both;
+}
+
+/* Bottom section */
+.bottom {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 10; pointer-events: all;
+  padding: 2rem 3rem 2.5rem;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  animation: fadeUp .7s 1.2s ease both;
+}
+
+/* Studio note */
+.studio-note {
+  display: flex; flex-direction: column; gap: .4rem;
+}
+.sn-label {
+  font-family: 'DM Mono', monospace; font-size: .52rem;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--light);
+}
+.sn-text {
+  font-family: 'Albert Sans', sans-serif; font-size: .82rem;
+  color: var(--mid); font-weight: 300; line-height: 1.5;
+  max-width: 260px;
+}
+
+/* LinkedIn links */
+.linkedin-pair {
+  display: flex; flex-direction: column; gap: .75rem;
+  align-items: flex-end;
+}
+.li-label {
+  font-family: 'DM Mono', monospace; font-size: .52rem;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--light); text-align: right; margin-bottom: .1rem;
+}
+.li-links { display: flex; gap: .6rem; align-items: center; }
+
+.li-link {
+  display: inline-flex; align-items: center; gap: .6rem;
+  text-decoration: none;
+  padding: .55rem 1rem;
+  border: 1px solid var(--border);
+  transition: border-color .2s, background .2s, transform .2s;
+  position: relative; overflow: hidden;
+}
+.li-link::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--ink); transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.25,.46,.45,.94);
+  z-index: 0;
+}
+.li-link:hover::before { transform: translateY(0); }
+.li-link:hover { border-color: var(--ink); }
+.li-link:hover .li-name,
+.li-link:hover .li-role { color: var(--paper); }
+.li-link:hover .li-dot { background: var(--paper); }
+
+.li-link-inner {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: .6rem;
+}
+.li-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  flex-shrink: 0; transition: background .2s;
+}
+.li-dot.teal { background: var(--teal); }
+.li-dot.pink { background: var(--pink); }
+.li-info { display: flex; flex-direction: column; gap: 1px; }
+.li-name {
+  font-family: 'Syne', sans-serif; font-weight: 700;
+  font-size: .75rem; letter-spacing: -.01em; color: var(--ink);
+  transition: color .2s;
+}
+.li-role {
+  font-family: 'DM Mono', monospace; font-size: .5rem;
+  letter-spacing: .1em; text-transform: uppercase;
+  transition: color .2s;
+}
+.li-role.teal { color: var(--teal); }
+.li-role.pink { color: var(--pink); }
+.li-link:hover .li-role.teal,
+.li-link:hover .li-role.pink { color: rgba(255,255,255,.55); }
+
+.li-arrow {
+  font-size: .75rem; color: var(--light);
+  transition: color .2s, transform .2s;
+  flex-shrink: 0;
+}
+.li-link:hover .li-arrow { color: rgba(255,255,255,.6); transform: translateX(3px); }
+
+/* Hint */
+.hint {
+  position: fixed; bottom: 6.5rem; left: 50%; transform: translateX(-50%);
+  font-family: 'DM Mono', monospace; font-size: .5rem;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--light);
+  z-index: 10; pointer-events: none;
+  animation: blink 3s 3.5s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+/* Divider rule */
+.rule {
+  position: fixed; bottom: 5.75rem; left: 3rem; right: 3rem;
+  height: 1px; background: var(--border);
+  z-index: 10;
+  animation: fadeIn .5s 1.4s ease both;
+}
+
+/* Atomic notation */
+.atomic {
+  position: fixed; top: 2rem; right: 3rem;
+  display: flex; flex-direction: column; align-items: flex-end; gap: .25rem;
+  animation: fadeIn .6s 1.6s ease both;
+  pointer-events: none;
+}
+.at-num {
+  font-family: 'DM Mono', monospace; font-size: .5rem;
+  letter-spacing: .16em; color: var(--light);
+}
+.at-sym {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 1.5rem; letter-spacing: -.04em;
+  color: transparent; -webkit-text-stroke: 1.5px var(--light);
+}
+
+/* Left label */
+.left-label {
+  position: fixed; top: 2rem; left: 3rem;
+  font-family: 'DM Mono', monospace; font-size: .5rem;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--light);
+  animation: fadeIn .6s 1.6s ease both;
+  pointer-events: none;
+}
+
+
+.coming-sub {
+  font-family: 'Albert Sans', sans-serif;
+  font-weight: 300;
+  font-size: clamp(.85rem, 1.5vw, 1rem);
+  letter-spacing: .12em;
+  color: var(--mid);
+  margin-top: .75rem;
+  animation: fadeUp .6s 1s ease both;
+}
+
+/* ── KEYFRAMES ── */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeDown { from{opacity:0;transform:translate(-50%,-12px)} to{opacity:1;transform:translate(-50%,0)} }
+@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+@keyframes pulseDot { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.8);opacity:.5} }
+@keyframes blink    { 0%,100%{opacity:0} 50%{opacity:.55} }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  .bottom { flex-direction: column; align-items: center; gap: 1.5rem; padding: 1.5rem; }
+  .linkedin-pair { align-items: center; }
+  .li-links { flex-direction: column; }
+  .studio-note { align-items: center; text-align: center; }
+  .sn-text { max-width: 100%; }
+  .hint { display: none; }
+  .left-label, .atomic { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="cur-dot"></div>
+<div id="cur-ring"></div>
+
+<canvas id="c"></canvas>
+
+<!-- Logo -->
+<div class="logo">
+  <span class="logo-lucky">Lucky</span><span class="logo-28">28</span>
+</div>
+
+<!-- Atomic notation -->
+<div class="atomic">
+  <div class="at-num">28</div>
+  <div class="at-sym">Ni</div>
+</div>
+
+<!-- Left label -->
+<div class="left-label">Nichol &amp; Brown</div>
+
+<!-- Centre UI -->
+<div class="ui">
+  <div class="wordmark">
+    <span class="wm-lucky">Lucky</span>
+    <span class="wm-28">28</span>
+  </div>
+  <div class="tagline">Digital craft studio · Est. 2025</div>
+  <h3 class="coming-sub">Something is coming</h3>
+</div>
+
+<!-- Rule -->
+<div class="rule"></div>
+
+<!-- Hint -->
+<div class="hint">click to scatter · move to attract</div>
+
+<!-- Bottom -->
+<div class="bottom">
+  <div class="studio-note">
+    <div class="sn-label">In the meantime</div>
+    <div class="sn-text">Say hello to our founders</div>
+  </div>
+
+  <div class="linkedin-pair">
+    <div class="li-label">Meet the studio</div>
+    <div class="li-links">
+      <a class="li-link" href="https://www.linkedin.com/in/tobynichol/" target="_blank" rel="noopener">
+        <div class="li-link-inner">
+          <div class="li-dot pink"></div>
+          <div class="li-info">
+            <div class="li-name">Toby Nichol</div>
+            <div class="li-role pink">Engineering &amp; AI</div>
+          </div>
+          <div class="li-arrow">↗</div>
+        </div>
+      </a>
+      <a class="li-link" href="https://www.linkedin.com/in/jhrb/" target="_blank" rel="noopener">
+        <div class="li-link-inner">
+          <div class="li-dot teal"></div>
+          <div class="li-info">
+            <div class="li-name">Jayde Brown</div>
+            <div class="li-role teal">Product &amp; Design</div>
+          </div>
+          <div class="li-arrow">↗</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const curDot = document.getElementById('cur-dot');
+const curRing= document.getElementById('cur-ring');
+
+const PINK = '#E8527E', TEAL = '#1FA896', INK = '#0F0D0B', PAPER = '#FAF8F3';
+const COLORS = [TEAL, TEAL, TEAL, PINK, PINK, PINK, INK];
+
+let W = 0, H = 0;
+let mx = -9999, my = -9999, rx = 0, ry = 0;
+let phase = 'forming'; // forming | holding | free
+let phaseT = 0;
+let lastTime = 0;
+let particles = [];
+let targets = [];
+
+/* ── Guards ── */
+const ok  = v => typeof v === 'number' && isFinite(v) && !isNaN(v);
+const okP = (x, y) => ok(x) && ok(y);
+const cl  = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+/* ── Resize ── */
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+/* ── Build letter targets by sampling "28" rendered to offscreen canvas ── */
+function buildTargets() {
+  targets = [];
+  const off = document.createElement('canvas');
+  off.width = W; off.height = H;
+  const oc  = off.getContext('2d');
+
+  const fs = Math.min(W * 0.52, H * 0.68);
+  oc.font = `800 ${fs}px 'Syne', sans-serif`;
+  oc.textAlign    = 'center';
+  oc.textBaseline = 'middle';
+  oc.fillStyle    = '#000';
+  oc.fillText('28', W / 2, H / 2);
+
+  const data = oc.getImageData(0, 0, W, H).data;
+  const step = Math.max(4, Math.floor(W / 110));
+  const raw  = [];
+
+  for (let y = 0; y < H; y += step) {
+    for (let x = 0; x < W; x += step) {
+      if (data[(y * W + x) * 4 + 3] > 128) raw.push({ x, y });
+    }
+  }
+
+  const N = 168;
+  const stride = Math.max(1, Math.floor(raw.length / N));
+  for (let i = 0; i < raw.length && targets.length < N; i += stride) {
+    targets.push(raw[i]);
+  }
+  // Pad if not enough pixels sampled
+  while (targets.length < N && raw.length > 0) {
+    targets.push(raw[Math.floor(Math.random() * raw.length)]);
+  }
+}
+
+/* ── Build particles — only after W/H are known ── */
+function buildParticles() {
+  particles = [];
+  const N = 168;
+  for (let i = 0; i < N; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 80 + Math.random() * Math.max(W, H) * 0.38;
+    particles.push({
+      x:  cl(W / 2 + Math.cos(angle) * dist, 0, W),
+      y:  cl(H / 2 + Math.sin(angle) * dist, 0, H),
+      vx: 0, vy: 0,
+      tx: W / 2, ty: H / 2,     // target (letter position)
+      size: cl(2 + Math.random() * 2.8, 0.5, 6),
+      color: COLORS[i % COLORS.length],
+      opacity: 0.55 + Math.random() * 0.4,
+      trail: [],
+      fvx: (Math.random() - .5) * 2.5, // free-mode velocity
+      fvy: (Math.random() - .5) * 2.5,
+    });
+  }
+}
+
+/* ── Assign letter targets to particles ── */
+function assignTargets() {
+  particles.forEach((p, i) => {
+    const t = targets[i % targets.length];
+    if (t && okP(t.x, t.y)) { p.tx = t.x; p.ty = t.y; }
+    else { p.tx = W / 2; p.ty = H / 2; }
+  });
+}
+
+/* ── Scatter all particles outward ── */
+function scatter() {
+  particles.forEach(p => {
+    const angle = Math.atan2(p.y - H/2, p.x - W/2);
+    p.fvx = Math.cos(angle) * (2 + Math.random() * 3);
+    p.fvy = Math.sin(angle) * (2 + Math.random() * 3);
+  });
+}
+
+/* ── Draw subtle grid ── */
+function drawGrid() {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(15,13,11,0.035)';
+  ctx.lineWidth   = 0.5;
+  for (let x = 0; x < W; x += 55) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 55) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  ctx.restore();
+}
+
+/* ── Main loop ── */
+function frame(ts) {
+  const dt = Math.min((ts - lastTime) / 1000, 0.05);
+  lastTime = ts;
+
+  // Phase timer
+  if (phase === 'forming') {
+    phaseT += dt;
+    if (phaseT > 2.6) { phase = 'holding'; phaseT = 0; }
+  } else if (phase === 'holding') {
+    phaseT += dt;
+    if (phaseT > 1.6) { phase = 'free'; scatter(); }
+  }
+
+  const isFree = phase === 'free';
+
+  /* Background */
+  ctx.fillStyle = PAPER;
+  ctx.fillRect(0, 0, W, H);
+  drawGrid();
+
+  /* Update + draw each particle */
+  particles.forEach((p, i) => {
+    // Sanity reset
+    if (!okP(p.x, p.y) || !okP(p.vx, p.vy)) {
+      p.x = W/2; p.y = H/2; p.vx = 0; p.vy = 0;
+    }
+
+    if (isFree) {
+      /* Free mode: mouse attracts */
+      if (okP(mx, my)) {
+        const dx = mx - p.x, dy = my - p.y;
+        const d  = Math.hypot(dx, dy);
+        if (ok(d) && d > 2 && d < 200) {
+          const f = ((200 - d) / 200) * 0.55;
+          p.fvx += (dx / d) * f;
+          p.fvy += (dy / d) * f;
+        }
+      }
+      p.fvx *= 0.97; p.fvy *= 0.97;
+
+      // Speed cap
+      const spd = Math.hypot(p.fvx, p.fvy);
+      if (ok(spd) && spd > 6) { p.fvx = (p.fvx/spd)*6; p.fvy = (p.fvy/spd)*6; }
+
+      p.x += p.fvx; p.y += p.fvy;
+
+      // Soft wrap
+      if (p.x < -20) p.x = W + 20;
+      if (p.x > W+20) p.x = -20;
+      if (p.y < -20) p.y = H + 20;
+      if (p.y > H+20) p.y = -20;
+
+    } else {
+      /* Forming/holding: spring to target */
+      if (!okP(p.tx, p.ty)) { p.tx = W/2; p.ty = H/2; }
+      const dx = p.tx - p.x, dy = p.ty - p.y;
+      const ease = phase === 'forming' ? 0.07 : 0.11;
+      p.vx += dx * ease;
+      p.vy += dy * ease;
+      p.vx *= 0.72; p.vy *= 0.72;
+
+      const spd = Math.hypot(p.vx, p.vy);
+      if (ok(spd) && spd > 10) { p.vx = (p.vx/spd)*10; p.vy = (p.vy/spd)*10; }
+
+      p.x += p.vx; p.y += p.vy;
+    }
+
+    // Final clamp
+    p.x = cl(ok(p.x) ? p.x : W/2, -30, W+30);
+    p.y = cl(ok(p.y) ? p.y : H/2, -30, H+30);
+
+    /* Trail */
+    p.trail.push({ x: p.x, y: p.y });
+    if (p.trail.length > 10) p.trail.shift();
+
+    if (p.trail.length > 1) {
+      for (let t = 1; t < p.trail.length; t++) {
+        const ta = p.trail[t-1], tb = p.trail[t];
+        if (!okP(ta.x, ta.y) || !okP(tb.x, tb.y)) continue;
+        ctx.beginPath();
+        ctx.moveTo(ta.x, ta.y);
+        ctx.lineTo(tb.x, tb.y);
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth   = p.size * 0.45 * (t / p.trail.length);
+        ctx.globalAlpha = 0.12 * (t / p.trail.length);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    /* Connection lines when forming */
+    if (!isFree) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const q = particles[j];
+        if (!okP(q.x, q.y)) continue;
+        const d = Math.hypot(p.x - q.x, p.y - q.y);
+        if (!ok(d) || d > 20) continue;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(q.x, q.y);
+        ctx.strokeStyle = 'rgba(15,13,11,0.1)';
+        ctx.lineWidth   = 0.5;
+        ctx.stroke();
+      }
+    }
+
+    /* Glow */
+    if (!okP(p.x, p.y) || !ok(p.size)) return;
+    const gr = Math.max(0.01, p.size * 2.8);
+    try {
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, gr);
+      g.addColorStop(0, p.color + 'AA');
+      g.addColorStop(1, p.color + '00');
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, gr, 0, Math.PI * 2);
+      ctx.fillStyle = g;
+      ctx.fill();
+    } catch (_) {}
+
+    /* Core dot */
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, Math.max(0.5, p.size), 0, Math.PI * 2);
+    ctx.fillStyle   = p.color;
+    ctx.globalAlpha = p.opacity;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  });
+
+  requestAnimationFrame(frame);
+}
+
+/* ── Cursor ── */
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  curDot.style.left = mx + 'px';
+  curDot.style.top  = my + 'px';
+});
+(function animR() {
+  rx += (mx - rx) * 0.1; ry += (my - ry) * 0.1;
+  curRing.style.left = rx + 'px';
+  curRing.style.top  = ry + 'px';
+  requestAnimationFrame(animR);
+})();
+
+document.querySelectorAll('a').forEach(a => {
+  a.addEventListener('mouseenter', () => curRing.classList.add('big'));
+  a.addEventListener('mouseleave', () => curRing.classList.remove('big'));
+});
+
+/* ── Click: toggle formation / scatter ── */
+canvas.addEventListener('click', () => {
+  if (phase === 'free') {
+    // Re-form
+    phase = 'forming'; phaseT = 0;
+    particles.forEach(p => { p.vx = 0; p.vy = 0; });
+    assignTargets();
+  } else if (phase === 'holding') {
+    phase = 'free'; scatter();
+  }
+  // If still forming, let it finish
+});
+
+/* ── Resize ── */
+window.addEventListener('resize', () => {
+  resize();
+  buildTargets();
+  assignTargets();
+  // Rebuild particles so home positions are valid
+  const prevPhase = phase;
+  buildParticles();
+  if (prevPhase !== 'forming') assignTargets();
+});
+
+/* ── Boot — strict order: resize → build → targets → loop ── */
+resize();
+buildParticles();
+// Small delay so Syne font is loaded before we sample the glyph
+setTimeout(() => {
+  buildTargets();
+  assignTargets();
+}, 350);
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
