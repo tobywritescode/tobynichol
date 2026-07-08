@@ -178,20 +178,20 @@ body:has(#terminal.maximized) #terminal-bg {
   #terminal-contact { grid-area: contact; }
   #terminal-stuff { grid-area: stuff; }
 
-  /* About is the primary intro panel - always expanded on desktop */
-  #terminal-about,
-  #terminal-about:hover {
+  /* Desktop: panels always show their content — no hover-to-expand.
+     Uses .hud-module.sub-module so it outranks the later `.sub-module { max-height:80px }`. */
+  .hud-module.sub-module {
     max-height: none;
     padding: 1.75rem;
   }
 
-  #terminal-about .sub-title {
+  .hud-module.sub-module .sub-title {
     margin-bottom: 1.25rem;
     border-bottom: 1px solid var(--glass-border);
     padding-bottom: 0.75rem;
   }
 
-  #terminal-about .terminal-content {
+  .hud-module.sub-module .terminal-content {
     opacity: 1;
     visibility: visible;
     height: auto;
@@ -207,11 +207,6 @@ body:has(#terminal.maximized) #terminal-bg {
   padding: 1.25rem 1.75rem;
 }
 
-.sub-module:hover {
-  max-height: 400px;
-  padding: 1.75rem;
-}
-
 .sub-title {
   font-size: 1rem;
   text-transform: uppercase;
@@ -220,12 +215,6 @@ body:has(#terminal.maximized) #terminal-bg {
   margin: 0;
   transition: all 0.5s ease;
   flex-shrink: 0;
-}
-
-.sub-module:hover .sub-title {
-  margin-bottom: 1.25rem;
-  border-bottom: 1px solid var(--glass-border);
-  padding-bottom: 0.75rem;
 }
 
 .terminal-content {
@@ -237,14 +226,6 @@ body:has(#terminal.maximized) #terminal-bg {
   line-height: 1.6;
   height: 0;
   overflow: hidden;
-}
-
-.sub-module:hover .terminal-content {
-  opacity: 1;
-  visibility: visible;
-  height: auto;
-  max-height: 280px;
-  overflow-y: auto;
 }
 
 .work-links {
@@ -277,7 +258,7 @@ body:has(#terminal.maximized) #terminal-bg {
   width: 100%;
   max-width: 800px;
   height: auto;
-  max-height: 110px; 
+  max-height: 160px;
   padding: 1.5rem 2.5rem;
   display: flex;
   flex-direction: column;
@@ -295,6 +276,21 @@ body:has(#terminal.maximized) #terminal-bg {
   padding-bottom: 0;
   transition: all 0.5s ease;
   flex-shrink: 0; /* Header stays same size */
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.header-id { flex-shrink: 0; }
+
+.header-about {
+  max-width: 300px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+  text-align: right;
+  align-self: center;
 }
 
 #terminal.maximized #terminal-header {
@@ -645,6 +641,16 @@ body.intro-complete #terminal:not(.maximized) .maximize-btn {
 
   header h1 {
     font-size: 1.8rem;
+  }
+
+  #terminal-header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .header-about {
+    text-align: left;
+    max-width: none;
   }
 
   .briefing-container {

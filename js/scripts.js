@@ -453,6 +453,7 @@ export class TerminalCLI {
             // Easter eggs — not listed in help
             'sudo':    (args) => this.showSudo(args),
             'decrypt': (args) => this.showDecrypt(args),
+            'stuff':   () => this.showStuff(),
             // Aliases
             'ls':      () => this.showWork(),
             'whois':   () => this.showBio(),
@@ -602,6 +603,15 @@ export class TerminalCLI {
         this.addLine("ESTABLISHING_ENCRYPTED_COMMS_CHANNEL...", 'terminal-info');
         this.addLine(`  <a href='https://github.com/tobywritescode' target='_blank'>${ICONS.github} github.exe</a>`);
         this.addLine(`  <a href='https://linkedin.com/in/tobynichol' target='_blank'>${ICONS.linkedin} linkedin.sys</a>`);
+    }
+
+    // Easter egg — the old "Stuff" panel, now hidden here.
+    async showStuff() {
+        this.addLine("MISC_ARTIFACTS:", 'terminal-info');
+        this.addLine(`  <a href='/forensics' target='_blank'>${ICONS.external} Page_Weight_Forensics</a> - Tactical Payload Audit`);
+        this.addLine(`  <a href='/notes' target='_blank'>${ICONS.external} Sovereign_Notes</a> - AES-256 Encrypted Local Storage`);
+        this.addLine(`  <a href='/vault' target='_blank'>${ICONS.external} Sovereign_Vault</a> - AES-256 Password Manager`);
+        this.addLine(`  <a href='README.md' target='_blank'>${ICONS.code} Technical_Specs.md</a> - System Architecture`);
     }
 
     clear() {
@@ -766,6 +776,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+// Scattered "desk" layout for the homepage panels — position and width keyed by module id.
+function scatterLayout() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  return {
+    'terminal':         { left: 0.05 * vw, top: 0.11 * vh, width: Math.min(700, 0.50 * vw) },
+    'terminal-work':    { left: 0.60 * vw, top: 0.07 * vh, width: Math.min(360, 0.30 * vw) },
+    'terminal-stuff':   { left: 0.55 * vw, top: 0.44 * vh, width: Math.min(400, 0.34 * vw) },
+    'terminal-contact': { left: 0.15 * vw, top: 0.66 * vh, width: Math.min(320, 0.28 * vw) },
+    _default:           { left: 0.30 * vw, top: 0.30 * vh, width: 340 },
+  };
+}
+
 function initFloatingMode(cli) {
   // Floating windows are only for the homepage HUD — briefing pages have their own single-column layout.
   if (document.body.classList.contains('briefing-mode')) return;
@@ -780,21 +803,18 @@ function initFloatingMode(cli) {
 
   let zCounter = 100;
 
-  // Capture each module's natural layout position and width, then switch to floating mode.
+  // Place modules at scattered positions (overriding the tidy grid), then switch to floating mode.
   requestAnimationFrame(() => {
-    const captured = modules.map((mod) => {
-      const rect = mod.getBoundingClientRect();
-      return { left: rect.left, top: rect.top, width: rect.width };
-    });
-
     document.body.classList.add('floating-mode');
 
+    const layout = scatterLayout();
     // Suppress top/left transitions during initial placement so modules don't animate in from (0,0).
-    modules.forEach((mod, i) => {
+    modules.forEach((mod) => {
+      const slot = layout[mod.id] || layout._default;
       mod.style.transition = 'none';
-      mod.style.left = `${captured[i].left}px`;
-      mod.style.top = `${captured[i].top}px`;
-      mod.style.width = `${captured[i].width}px`;
+      mod.style.left = `${slot.left}px`;
+      mod.style.top = `${slot.top}px`;
+      mod.style.width = `${slot.width}px`;
       mod.style.zIndex = String(zCounter++);
     });
 
@@ -926,9 +946,10 @@ async function runIntroSequence(modules, cli) {
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
   const subModules = modules.filter((m) => m.classList.contains('sub-module'));
 
-  // Save the terminal's floating position before maximize clears inline styles.
-  const floatLeft  = mainTerminal.style.left;
-  const floatWidth = mainTerminal.style.width;
+  // Save the terminal's scattered home before maximize clears inline styles.
+  const homeLeft  = mainTerminal.style.left;
+  const homeTop   = mainTerminal.style.top;
+  const homeWidth = mainTerminal.style.width;
 
   // Maximise manually — bypasses the click handler so FLIP doesn't fire from a stale rect.
   mainTerminal.classList.add('maximized');
@@ -945,18 +966,12 @@ async function runIntroSequence(modules, cli) {
 
   await wait(500);
 
-  // Calculate target Y: just below the lowest sub-module (positions exist even while hidden).
-  const belowY = subModules.reduce((max, m) => {
-    const b = parseFloat(m.style.top || 0) + m.offsetHeight;
-    return b > max ? b : max;
-  }, 0) + 32;
-
-  // Slide the terminal down to its resting spot FIRST so it's clear of the sub-module area.
+  // Slide the terminal from the centre back to its scattered home.
   const first = mainTerminal.getBoundingClientRect();
   flipPosition(mainTerminal, first, () => {
-    mainTerminal.style.left  = floatLeft;
-    mainTerminal.style.top   = `${belowY}px`;
-    mainTerminal.style.width = floatWidth;
+    mainTerminal.style.left  = homeLeft;
+    mainTerminal.style.top   = homeTop;
+    mainTerminal.style.width = homeWidth;
     mainTerminal.classList.remove('maximized');
   });
 
