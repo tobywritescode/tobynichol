@@ -232,7 +232,20 @@ void main() {
       col.r = getColor(p + ca).r;
       col.b = getColor(p - ca).b;
     }
-    col *= uTint;
+    // Per-cell accent coloring: most cells use the base tint, a portion get an
+    // accent hue from a small phosphor palette. Keyed off the cell id so each
+    // glyph keeps a stable colour instead of shimmering frame to frame.
+    vec2 colGrid = uGridMul * 15.0;
+    vec2 colCell = floor(p * colGrid);
+    float cid = hash21(colCell);
+    vec3 tint = uTint;
+    if (cid > 0.72) {
+      float sel = fract(cid * 7.0);
+      if (sel < 0.34)      tint = vec3(0.35, 0.85, 1.0);  // cyan
+      else if (sel < 0.67) tint = vec3(1.0, 0.45, 0.70);  // pink
+      else                 tint = vec3(0.55, 1.0, 0.60);  // green
+    }
+    col *= tint;
     col *= uBrightness;
     if(uDither > 0.0){
       float rnd = hash21(gl_FragCoord.xy);
@@ -265,7 +278,7 @@ export class FaultyTerminal {
       dither: options.dither || 0.1,
       curvature: options.curvature || 0.15,
       tint: options.tint || '#fafaf9',
-      brightness: options.brightness || 0.9,
+      brightness: options.brightness || 0.6,
       mouseStrength: options.mouseStrength || 0.5,
     };
 
@@ -482,7 +495,7 @@ export class TerminalCLI {
     handleCommand(cmd) {
         if (cmd === '') return;
 
-        this.addLine(`<span class="prompt-user">[USER@TOBYNICHOL]:~ ></span> ${cmd}`);
+        this.addLine(`<span class="prompt-user"><span class="p-host">[USER@TOBYNICHOL]</span> <span class="p-dir">~/tobynichol</span> <span class="p-branch">(main)</span> &gt;</span> ${cmd}`);
 
         let cleanCmd = cmd.replace(/^["']|["']$/g, '');
         if (cleanCmd.startsWith('/')) cleanCmd = cleanCmd.substring(1);

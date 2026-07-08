@@ -401,6 +401,11 @@ body:has(#terminal.maximized) #terminal-bg {
   white-space: nowrap;
 }
 
+/* Shell-style prompt segments: machine / directory / branch */
+.prompt-user .p-host   { color: #f87171; }  /* red   — machine   */
+.prompt-user .p-dir    { color: #4ade80; }  /* green — directory */
+.prompt-user .p-branch { color: #60a5fa; }  /* blue  — branch    */
+
 #command-input {
   flex: 1;
   background: transparent;
@@ -687,3 +692,8 @@ body.intro-complete #terminal:not(.maximized) .maximize-btn {
     padding-bottom: 0.75rem;
   }
 }
+
+/* Terminal panel colours — echoes the shell prompt (machine / directory / branch) */
+#terminal-header h1 { color: #f87171; }  /* red   — identity  (machine)   */
+.sub-title          { color: #4ade80; }  /* green — section   (directory) */
+.module-meta        { color: #60a5fa; }  /* blue  — id tag    (branch)    */
