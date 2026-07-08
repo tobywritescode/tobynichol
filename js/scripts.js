@@ -781,11 +781,13 @@ function scatterLayout() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const contactW = Math.min(320, 0.28 * vw);
+  // Centre it, but keep its right edge clear of the Writing panel (which starts at 0.55·vw).
+  const contactLeft = Math.min((vw - contactW) / 2, 0.55 * vw - contactW - 40);
   return {
     'terminal':         { left: 0.05 * vw, top: 0.11 * vh, width: Math.min(700, 0.50 * vw) },
     'terminal-work':    { left: 0.60 * vw, top: 0.07 * vh, width: Math.min(360, 0.30 * vw) },
     'terminal-stuff':   { left: 0.55 * vw, top: 0.44 * vh, width: Math.min(400, 0.34 * vw) },
-    'terminal-contact': { left: (vw - contactW) / 2, top: 0.40 * vh, width: contactW },
+    'terminal-contact': { left: contactLeft, top: 0.40 * vh, width: contactW },
     _default:           { left: 0.30 * vw, top: 0.30 * vh, width: 340 },
   };
 }
