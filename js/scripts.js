@@ -400,7 +400,10 @@ export class FaultyTerminal {
     requestAnimationFrame((t) => this.update(t));
 
     if (this.paused) return;
-    if (this.isMobile && t - this.lastFrameTime < 33) return; // ~30fps cap on mobile
+    // ~30fps cap (all devices). The fragment shader is GPU-heavy; running it at the
+    // display's full refresh rate keeps the GPU pinned and can thermally throttle
+    // laptops after a minute or so, which shows up as progressive stutter.
+    if (t - this.lastFrameTime < 33) return;
     this.lastFrameTime = t;
 
     if (this.loadAnimationStart === 0) this.loadAnimationStart = t;
@@ -784,7 +787,7 @@ function scatterLayout() {
   // Centre it, but keep its right edge clear of the Writing panel (which starts at 0.55·vw).
   const contactLeft = Math.min((vw - contactW) / 2, 0.55 * vw - contactW - 40);
   return {
-    'terminal':         { left: 0.05 * vw, top: 0.11 * vh, width: Math.min(700, 0.50 * vw) },
+    'terminal':         { left: 0.11 * vw, top: 0.11 * vh, width: Math.min(700, 0.50 * vw) },
     'terminal-work':    { left: 0.60 * vw, top: 0.07 * vh, width: Math.min(360, 0.30 * vw) },
     'terminal-stuff':   { left: 0.55 * vw, top: 0.44 * vh, width: Math.min(400, 0.34 * vw) },
     'terminal-contact': { left: contactLeft, top: 0.40 * vh, width: contactW },
@@ -801,8 +804,9 @@ function initFloatingMode(cli) {
   const modules = Array.from(document.querySelectorAll('.hud-module'));
   if (!modules.length) return;
 
-  // Gate sub-modules invisible before any paint — paired with the body.intro-active CSS rule.
-  document.body.classList.add('intro-active');
+  // Gate sub-modules invisible before any paint — paired with the .intro-active CSS rule.
+  // (The inline head script also sets this on <html> pre-paint; keep them on the same element.)
+  document.documentElement.classList.add('intro-active');
 
   let zCounter = 100;
 
@@ -830,15 +834,13 @@ function initFloatingMode(cli) {
 
   // Drag handling — header strip only, with movement threshold so clicks/hovers still work.
   modules.forEach((mod) => {
+    // Click any panel to bring it to the front — like focusing a real window.
+    mod.addEventListener('pointerdown', () => {
+      mod.style.zIndex = String(++zCounter);
+    });
+
     const handle = mod.querySelector('#terminal-header, .terminal-header');
     if (!handle) return;
-
-    // Sub-modules expand downward on hover; bring them forward so they aren't clipped by neighbours.
-    if (mod.classList.contains('sub-module')) {
-      mod.addEventListener('mouseenter', () => {
-        mod.style.zIndex = String(++zCounter);
-      });
-    }
 
     let active = false;
     let moved = false;
@@ -988,7 +990,7 @@ async function runIntroSequence(modules, cli) {
   }
 
   await wait(1100);
-  document.body.classList.remove('intro-active');
+  document.documentElement.classList.remove('intro-active');
   document.body.classList.add('intro-complete');
 
   // Stop the maximize-button pulse the first time the user re-opens the terminal.

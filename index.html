@@ -3,6 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+      // Hide the homepage panels before first paint on desktop so they don't flash in their
+      // grid position before the floating intro runs. JS clears this at the end of the intro;
+      // the timeout is a safety net so panels can never stay hidden if the intro never runs.
+      (function () {
+        try {
+          var touchOrSmall = window.innerWidth < 768 || navigator.maxTouchPoints > 0;
+          if (!touchOrSmall) {
+            document.documentElement.classList.add('intro-active');
+            setTimeout(function () {
+              document.documentElement.classList.remove('intro-active');
+            }, 6000);
+          }
+        } catch (e) {}
+      })();
+    </script>
     <title>Toby Nichol | Precision Operator // Software Engineer</title>
     <meta name="description" content="Titan of engineering. Specialising in Java microservices, fintech architecture, and Python contract logic for institutional banking. Zero-margin engineering for the modern stack.">
     <meta name="keywords" content="Java Microservices, Fintech Architecture, Python Contract Logic, Institutional Banking, Senior Software Engineer, Toby Nichol">

@@ -586,12 +586,12 @@ body.floating-mode #terminal.maximized {
 }
 
 /* INTRO SEQUENCE */
-body.intro-active .sub-module {
+.intro-active .sub-module {
   opacity: 0;
   visibility: hidden;
 }
 
-body.intro-active .sub-module.intro-revealed {
+.intro-active .sub-module.intro-revealed {
   opacity: 1;
   visibility: visible;
   transition: opacity 0.7s ease;
